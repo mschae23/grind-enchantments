@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.martenschaefer.grindenchantments.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "GrindstoneContainerMixin",
+    "GrindstoneScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
