@@ -4,10 +4,11 @@
   "package": "de.martenschaefer.grindenchantments.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-  ],
-  "client": [
     "GrindstoneContainerMixin",
     "GrindstoneScreenMixin"
+  ],
+  "client": [
+    
   ],
   "injectors": {
     "defaultRequire": 1

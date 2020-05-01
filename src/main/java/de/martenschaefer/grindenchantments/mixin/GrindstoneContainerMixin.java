@@ -167,12 +167,21 @@ public abstract class GrindstoneContainerMixin extends Container {
 							|| itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK) {
 						
 						ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
+						ItemStack bookItemStack = itemStack1.getItem() == Items.BOOK? itemStack1 : itemStack2;
 
 						if (!player.abilities.creativeMode) {
 							player.addExperienceLevels(-getLevelCost(enchantedItemStack));
 						}
 						craftingInventory.setInvStack(itemStack1.hasEnchantments()? 0 : 1, grind(enchantedItemStack));
-						craftingInventory.setInvStack(itemStack1.getItem() == Items.BOOK? 0 : 1, ItemStack.EMPTY);
+						
+						if(bookItemStack.getCount() == 1) 
+						 craftingInventory.setInvStack(itemStack1.getItem() == Items.BOOK? 0 : 1, ItemStack.EMPTY);
+						else {
+							
+							ItemStack newBookItemStack = bookItemStack.copy();
+							newBookItemStack.setCount(bookItemStack.getCount() - 1);
+							craftingInventory.setInvStack(itemStack1.getItem() == Items.BOOK? 0 : 1,	newBookItemStack);
+						}
 						
 						world.playLevelEvent(1042, blockPos, 0);
 						return;

@@ -9,11 +9,12 @@
     "M_S_72"
   ],
   "contact": {
-    "homepage": "",
-    "sources": ""
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/grind-enchantments",
+    "sources": "https://github.com/M-S-72/grind-enchantments",
+    "issues": "https://github.com/M-S-72/grind-enchantments/issues"
   },
 
-  "license": "CC0-1.0",
+  "license": "MIT License",
   "icon": "assets/grindenchantments/icon.png",
 
   "environment": "*",
