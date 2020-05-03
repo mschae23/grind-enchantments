@@ -7,5 +7,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 	  
+		
 	}
 }
