@@ -116,13 +116,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 			@Override
 			public boolean canInsert(ItemStack stack) {
 
-				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || stack.getItem() == Items.BOOK
+				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || (stack.getItem() == Items.BOOK && input.getStack(1).getItem() != Items.BOOK)
 						|| stack.hasEnchantments();
-			}
-			@Override
-			public int getMaxStackAmount() {
-
-				return 1;
 			}
 		};
 	}
@@ -134,13 +129,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 			@Override
 			public boolean canInsert(ItemStack stack) {
 
-				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || stack.getItem() == Items.BOOK
+				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || (stack.getItem() == Items.BOOK && input.getStack(0).getItem() != Items.BOOK)
 						|| stack.hasEnchantments();
-			}
-			@Override
-			public int getMaxStackAmount() {
-
-				return 1;
 			}
 		};
 	}
@@ -176,15 +166,23 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 					if (itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
 							|| itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK) {
-
-						ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
+      
+						boolean stack1Book = itemStack1.getItem() == Items.BOOK;
+						ItemStack enchantedItemStack = stack1Book? itemStack2 : itemStack1;
+						ItemStack bookItemStack = stack1Book? itemStack1 : itemStack2;
 
 						if (!player.abilities.creativeMode) {
 							player.addExperienceLevels(-getLevelCost(enchantedItemStack));
 						}
-						input.setStack(itemStack1.hasEnchantments() ? 0 : 1, grind(enchantedItemStack));
-						input.setStack(itemStack1.getItem() == Items.BOOK ? 0 : 1, ItemStack.EMPTY);
-
+						input.setStack(stack1Book? 1 : 0, grind(enchantedItemStack));
+						
+						if(bookItemStack.getCount() == 1) input.setStack(stack1Book? 0 : 1, ItemStack.EMPTY);
+						else {
+							
+							ItemStack bookNew = bookItemStack.copy();
+							bookNew.setCount(bookItemStack.getCount() - 1);
+							input.setStack(stack1Book? 0 : 1, bookNew);
+						}
 						world.syncWorldEvent(1042, blockPos, 0);
 						return;
 					}
