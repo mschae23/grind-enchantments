@@ -45,49 +45,49 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 	private ItemStack transferEnchantmentsToBook(ItemStack target, ItemStack source) {
 
 		ItemStack itemStack = target.copy();
-  Map<Enchantment, Integer> map = EnchantmentHelper.get(source);
-  Iterator<Entry<Enchantment, Integer>> var5 = map.entrySet().iterator();
+		Map<Enchantment, Integer> map = EnchantmentHelper.get(source);
+		Iterator<Entry<Enchantment, Integer>> var5 = map.entrySet().iterator();
 
-  while(true) {
-     Entry<Enchantment, Integer> entry;
-     Enchantment enchantment;
-     int level;
-     do {
-        if (!var5.hasNext()) {
-           return itemStack;
-        }
+		while (true) {
+			Entry<Enchantment, Integer> entry;
+			Enchantment enchantment;
+			int level;
+			do {
+				if (!var5.hasNext()) {
+					return itemStack;
+				}
 
-        entry = var5.next();
-        enchantment = entry.getKey();
-        level = entry.getValue();
-     } while(enchantment.isCursed() && EnchantmentHelper.getLevel(enchantment, itemStack) != 0);
+				entry = var5.next();
+				enchantment = entry.getKey();
+				level = entry.getValue();
+			} while (enchantment.isCursed() && EnchantmentHelper.getLevel(enchantment, itemStack) != 0);
 
-     EnchantedBookItem.addEnchantment(itemStack, new EnchantmentLevelEntry(enchantment, level));
-  }
+			EnchantedBookItem.addEnchantment(itemStack, new EnchantmentLevelEntry(enchantment, level));
+		}
 	}
-	private ItemStack grind(ItemStack item) { 
-		
+	private ItemStack grind(ItemStack item) {
+
 		ItemStack itemStack = item.copy();
-  itemStack.removeSubTag("Enchantments");
-  itemStack.removeSubTag("StoredEnchantments");
-  
-  Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream().filter((entry) -> {
-     return ((Enchantment)entry.getKey()).isCursed();
-  }).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-  EnchantmentHelper.set(map, itemStack);
-  itemStack.setRepairCost(0);
-  if (itemStack.getItem() == Items.ENCHANTED_BOOK && map.size() == 0) {
-     itemStack = new ItemStack(Items.BOOK);
-     if (item.hasCustomName()) {
-        itemStack.setCustomName(item.getName());
-     }
-  }
+		itemStack.removeSubTag("Enchantments");
+		itemStack.removeSubTag("StoredEnchantments");
 
-  for(int i = 0; i < map.size(); ++i) {
-     itemStack.setRepairCost(AnvilScreenHandler.getNextCost(itemStack.getRepairCost()));
-  }
+		Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream().filter((entry) -> {
+			return ((Enchantment) entry.getKey()).isCursed();
+		}).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+		EnchantmentHelper.set(map, itemStack);
+		itemStack.setRepairCost(0);
+		if (itemStack.getItem() == Items.ENCHANTED_BOOK && map.size() == 0) {
+			itemStack = new ItemStack(Items.BOOK);
+			if (item.hasCustomName()) {
+				itemStack.setCustomName(item.getName());
+			}
+		}
 
-  return itemStack;
+		for (int i = 0; i < map.size(); ++i) {
+			itemStack.setRepairCost(AnvilScreenHandler.getNextCost(itemStack.getRepairCost()));
+		}
+
+		return itemStack;
 	}
 
 	@Inject(at = @At("HEAD"), method = "updateResult", cancellable = true)
@@ -113,10 +113,16 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 		return new Slot(this.input, 0, 49, 19) {
 
+			@Override
 			public boolean canInsert(ItemStack stack) {
 
 				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || stack.getItem() == Items.BOOK
 						|| stack.hasEnchantments();
+			}
+			@Override
+			public int getMaxStackAmount() {
+
+				return 1;
 			}
 		};
 	}
@@ -125,10 +131,16 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 		return new Slot(this.input, 1, 49, 40) {
 
+			@Override
 			public boolean canInsert(ItemStack stack) {
 
 				return stack.isDamageable() || stack.getItem() == Items.ENCHANTED_BOOK || stack.getItem() == Items.BOOK
 						|| stack.hasEnchantments();
+			}
+			@Override
+			public int getMaxStackAmount() {
+
+				return 1;
 			}
 		};
 	}
@@ -148,7 +160,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 				if (itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
 						|| itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK) {
-					
+
 					ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
 
 					return (playerEntity.abilities.creativeMode || playerEntity.experienceLevel >= getLevelCost(enchantedItemStack));
@@ -164,24 +176,15 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 					if (itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
 							|| itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK) {
-						
+
 						ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
-						ItemStack bookItemStack = itemStack1.getItem() == Items.BOOK? itemStack1 : itemStack2;
 
 						if (!player.abilities.creativeMode) {
 							player.addExperienceLevels(-getLevelCost(enchantedItemStack));
 						}
-						input.setStack(itemStack1.hasEnchantments()? 0 : 1, grind(enchantedItemStack));
-						
-						if(bookItemStack.getCount() == 1) 
-						 input.setStack(itemStack1.getItem() == Items.BOOK? 0 : 1, ItemStack.EMPTY);
-						else {
-							
-							ItemStack newBookItemStack = bookItemStack.copy();
-							newBookItemStack.setCount(bookItemStack.getCount() - 1);
-							input.setStack(itemStack1.getItem() == Items.BOOK? 0 : 1,	newBookItemStack);
-						}
-						
+						input.setStack(itemStack1.hasEnchantments() ? 0 : 1, grind(enchantedItemStack));
+						input.setStack(itemStack1.getItem() == Items.BOOK ? 0 : 1, ItemStack.EMPTY);
+
 						world.syncWorldEvent(1042, blockPos, 0);
 						return;
 					}
@@ -194,12 +197,12 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 						world.spawnEntity(new ExperienceOrbEntity(world, (double) blockPos.getX(), (double) blockPos.getY() + 0.5D,
 								(double) blockPos.getZ() + 0.5D, j));
 					}
-     input.setStack(0, ItemStack.EMPTY);
-				 input.setStack(1, ItemStack.EMPTY);
-				 
+					input.setStack(0, ItemStack.EMPTY);
+					input.setStack(1, ItemStack.EMPTY);
+
 					world.syncWorldEvent(1042, blockPos, 0);
 				});
-				
+
 				return stack;
 			}
 
@@ -233,12 +236,12 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
 				return i;
 			}
-			
+
 		};
 	}
 	@Environment(EnvType.CLIENT)
- public int getLevelCost() {
-  
+	public int getLevelCost() {
+
 		ItemStack itemStack = this.input.getStack(0);
 		ItemStack itemStack2 = this.input.getStack(1);
 
@@ -249,22 +252,22 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 			return getLevelCost(enchantedItemStack);
 		}
 		return 0;
- }
+	}
 	private int getLevelCost(ItemStack stack) {
-				
-				int i = 0;
-				Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
-				Iterator<Entry<Enchantment, Integer>> var4 = map.entrySet().iterator();
 
-				while (var4.hasNext()) {
-					Entry<Enchantment, Integer> entry = var4.next();
-					Enchantment enchantment = (Enchantment) entry.getKey();
-					Integer integer = entry.getValue();
-					if (!enchantment.isCursed()) {
-						i += integer;
-					}
-				}
+		int i = 0;
+		Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
+		Iterator<Entry<Enchantment, Integer>> var4 = map.entrySet().iterator();
 
-				return i;
+		while (var4.hasNext()) {
+			Entry<Enchantment, Integer> entry = var4.next();
+			Enchantment enchantment = (Enchantment) entry.getKey();
+			Integer integer = entry.getValue();
+			if (!enchantment.isCursed()) {
+				i += integer;
 			}
+		}
+
+		return i;
+	}
 }
