@@ -14,7 +14,6 @@ public class LevelCostHelper {
 
  private LevelCostHelper() {}
 
- @Environment(EnvType.CLIENT)
  public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
 
   if (itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
