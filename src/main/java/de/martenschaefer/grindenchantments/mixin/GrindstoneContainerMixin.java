@@ -165,22 +165,23 @@ public abstract class GrindstoneContainerMixin extends Container {
 
 					if (itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
 							|| itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK) {
-						
-						ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
-						ItemStack bookItemStack = itemStack1.getItem() == Items.BOOK? itemStack1 : itemStack2;
+
+						boolean stack1Book = itemStack1.getItem() == Items.BOOK;
+						ItemStack enchantedItemStack = stack1Book? itemStack2 : itemStack1;
+						ItemStack bookItemStack = stack1Book? itemStack1 : itemStack2;
 
 						if (!player.abilities.creativeMode) {
 							player.addExperienceLevels(-getLevelCost(enchantedItemStack));
 						}
-						craftingInventory.setInvStack(itemStack1.hasEnchantments()? 0 : 1, grind(enchantedItemStack));
+						craftingInventory.setInvStack(stack1Book? 1 : 0, grind(enchantedItemStack));
 						
 						if(bookItemStack.getCount() == 1) 
-						 craftingInventory.setInvStack(itemStack1.getItem() == Items.BOOK? 0 : 1, ItemStack.EMPTY);
+						 craftingInventory.setInvStack(stack1Book? 0 : 1, ItemStack.EMPTY);
 						else {
 							
 							ItemStack newBookItemStack = bookItemStack.copy();
 							newBookItemStack.setCount(bookItemStack.getCount() - 1);
-							craftingInventory.setInvStack(itemStack1.getItem() == Items.BOOK? 0 : 1,	newBookItemStack);
+							craftingInventory.setInvStack(stack1Book? 0 : 1,	newBookItemStack);
 						}
 						
 						world.playLevelEvent(1042, blockPos, 0);
