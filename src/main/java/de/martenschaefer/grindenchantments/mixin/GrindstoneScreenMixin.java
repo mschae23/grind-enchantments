@@ -3,6 +3,10 @@ package de.martenschaefer.grindenchantments.mixin;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import de.martenschaefer.grindenchantments.LevelCostHelper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,7 +33,8 @@ public abstract class GrindstoneScreenMixin extends ContainerScreen<GrindstoneCo
 	@Inject(method = "drawForeground", at = @At("RETURN"))
 	protected void onDrawForeground(int mouseX, int mouseY, CallbackInfo ci) {
 		
-		int i = getLevelCost(((GrindstoneScreen)(Object) this).getContainer().getSlot(0), ((GrindstoneScreen)(Object) this).getContainer().getSlot(1));
+		int i = LevelCostHelper.getLevelCost(((GrindstoneScreen)(Object) this).getContainer().getSlot(0).getStack(),
+										((GrindstoneScreen)(Object) this).getContainer().getSlot(1).getStack());
   if (i > 0) {
      int j = 8453920;
      boolean bl = true;
@@ -47,35 +52,5 @@ public abstract class GrindstoneScreenMixin extends ContainerScreen<GrindstoneCo
         this.font.drawWithShadow(string, (float)k, 69.0F, j);
      }
   }
-	}
- private int getLevelCost(Slot slot0, Slot slot1) {
-  
-		ItemStack itemStack = slot0.getStack();
-		ItemStack itemStack2 = slot1.getStack();
-
-		if (itemStack.hasEnchantments() && itemStack2.getItem() == Items.BOOK
-				|| itemStack2.hasEnchantments() && itemStack.getItem() == Items.BOOK) {
-
-			ItemStack enchantedItemStack = itemStack.hasEnchantments() ? itemStack : itemStack2;
-			return getLevelCost(enchantedItemStack);
-		}
-		return 0;
- }
-	private int getLevelCost(ItemStack stack) {
-				
-				int i = 0;
-				Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(stack);
-				Iterator<Entry<Enchantment, Integer>> var4 = map.entrySet().iterator();
-
-				while (var4.hasNext()) {
-					Entry<Enchantment, Integer> entry = var4.next();
-					Enchantment enchantment = (Enchantment) entry.getKey();
-					Integer integer = entry.getValue();
-					if (!enchantment.isCursed()) {
-						i += integer;
-					}
-				}
-
-				return i;
 	}
 }
