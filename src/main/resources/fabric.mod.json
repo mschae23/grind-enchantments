@@ -6,12 +6,12 @@
   "name": "Grind Enchantments",
   "description": "This mod adds a few new features to the grindstone.",
   "authors": [
-    "M_S_72"
+    "mschae23"
   ],
   "contact": {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/grind-enchantments",
-    "sources": "https://github.com/MartenSchaefer/grind-enchantments",
-    "issues": "https://github.com/MartenSchaefer/grind-enchantments/issues"
+    "sources": "https://github.com/mschae23/grind-enchantments",
+    "issues": "https://github.com/mschae23/grind-enchantments/issues"
   },
 
   "license": "MIT License",
