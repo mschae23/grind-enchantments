@@ -51,6 +51,16 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
    this.sendContentUpdates();
    ci.cancel();
   }
+  else if(GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
+
+   ItemStack result = GrindEnchantments.Transfer.doTransferOperation(itemStack1, itemStack2);
+
+   if(result == null) return;
+
+   this.result.setStack(0, result);
+   this.sendContentUpdates();
+   ci.cancel();
+  }
  }
  @ModifyArg(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;addSlot(Lnet/minecraft/screen/slot/Slot;)Lnet/minecraft/screen/slot/Slot;", ordinal = 0), index = 0)
  public Slot modifySlot0(Slot slot) {
@@ -92,7 +102,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     ItemStack itemStack1 = input.getStack(0);
     ItemStack itemStack2 = input.getStack(1);
 
-    if (GrindEnchantments.Extract.isExtractOperation(itemStack1, itemStack2)) {
+    if (GrindEnchantments.Extract.isExtractOperation(itemStack1, itemStack2) ||
+        GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
 
      return (playerEntity.abilities.creativeMode || playerEntity.experienceLevel >=
       GrindEnchantments.getLevelCost(itemStack1, itemStack2));
@@ -111,6 +122,13 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
       GrindEnchantments.Extract.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
       return;
      }
+     else if(GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
+
+      GrindEnchantments.Transfer.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
+      return;
+     }
+
+     // Vanilla Grindstone take item logic
 
      int i = this.getExperience(world);
 
