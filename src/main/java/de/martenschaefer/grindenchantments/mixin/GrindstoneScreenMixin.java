@@ -1,27 +1,16 @@
 package de.martenschaefer.grindenchantments.mixin;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import de.martenschaefer.grindenchantments.LevelCostHelper;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import de.martenschaefer.grindenchantments.GrindEnchantments;
 import net.minecraft.client.gui.screen.ingame.ContainerScreen;
 import net.minecraft.client.gui.screen.ingame.GrindstoneScreen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.container.GrindstoneContainer;
-import net.minecraft.container.Slot;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GrindstoneScreen.class)
 public abstract class GrindstoneScreenMixin extends ContainerScreen<GrindstoneContainer> {
@@ -33,7 +22,7 @@ public abstract class GrindstoneScreenMixin extends ContainerScreen<GrindstoneCo
 	@Inject(method = "drawForeground", at = @At("RETURN"))
 	protected void onDrawForeground(int mouseX, int mouseY, CallbackInfo ci) {
 		
-		int i = LevelCostHelper.getLevelCost(((GrindstoneScreen)(Object) this).getContainer().getSlot(0).getStack(),
+		int i = GrindEnchantments.getLevelCost(((GrindstoneScreen)(Object) this).getContainer().getSlot(0).getStack(),
 										((GrindstoneScreen)(Object) this).getContainer().getSlot(1).getStack());
   if (i > 0) {
      int j = 8453920;
