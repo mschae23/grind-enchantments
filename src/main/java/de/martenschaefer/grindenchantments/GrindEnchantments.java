@@ -12,15 +12,11 @@ import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GrindEnchantments {
 
- private GrindEnchantments() {
-
- }
  public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
 
   if (Extract.isExtractOperation(itemStack1, itemStack2)) {
@@ -94,7 +90,7 @@ public class GrindEnchantments {
    itemStack.removeSubTag("StoredEnchantments");
 
    Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream().filter((entry) ->
-           entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
    EnchantmentHelper.set(map, itemStack);
    itemStack.setRepairCost(0);
 
@@ -114,33 +110,17 @@ public class GrindEnchantments {
   public static ItemStack transferEnchantmentsToBook(ItemStack target, ItemStack source) {
 
    ItemStack itemStack = target.copy();
-   Map<Enchantment, Integer> map = EnchantmentHelper.get(source);
-   Iterator<Map.Entry<Enchantment, Integer>> var5 = map.entrySet().iterator();
+   Map<Enchantment, Integer> map = EnchantmentHelper.get(source).entrySet().stream().filter((entry) ->
+    !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-   while (true) {
+   for(Map.Entry<Enchantment, Integer> entry: map.entrySet()) {
 
-    Map.Entry<Enchantment, Integer> entry;
-    Enchantment enchantment;
-    int level;
-
-    do {
-     if (!var5.hasNext()) {
-
-      return itemStack;
-     }
-     entry = var5.next();
-     enchantment = entry.getKey();
-     level = entry.getValue();
-
-    } while (enchantment.isCursed() && EnchantmentHelper.getLevel(enchantment, itemStack) != 0);
-
-    EnchantedBookItem.addEnchantment(itemStack, new EnchantmentLevelEntry(enchantment, level));
+    EnchantedBookItem.addEnchantment(itemStack, new EnchantmentLevelEntry(entry.getKey(), entry.getValue()));
    }
+   return itemStack;
   }
  }
  public static class Transfer {
-
-  private Transfer() {}
 
   public static boolean isTransferOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
@@ -152,7 +132,8 @@ public class GrindEnchantments {
 
    if(EnchantedBookItem.getEnchantmentTag(itemStack1).size() < 2) return null;
 
-   Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1);
+   Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1).entrySet().stream().filter((entry) ->
+    !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
    Map.Entry<Enchantment, Integer> entry = enchantments.entrySet().iterator().next();
    ItemStack result;
 
@@ -170,7 +151,9 @@ public class GrindEnchantments {
   public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
 
    Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1);
-   Map.Entry<Enchantment, Integer> enchantment = enchantments.entrySet().iterator().next();
+   Map.Entry<Enchantment, Integer> enchantment = enchantments.entrySet().stream().filter((entry) ->
+    !(entry.getKey().isCursed() && EnchantmentHelper.getLevel(entry.getKey(), itemStack1) != 0))
+    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet().iterator().next();
    enchantments.remove(enchantment.getKey(), enchantment.getValue());
 
    ItemStack newItemStack1 = new ItemStack(Items.ENCHANTED_BOOK);
