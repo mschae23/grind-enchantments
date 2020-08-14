@@ -130,7 +130,7 @@ public class GrindEnchantments {
   }
   public static ItemStack doTransferOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
-   if(EnchantedBookItem.getEnchantmentTag(itemStack1).size() < 2) return null;
+   if(EnchantedBookItem.getEnchantmentTag(itemStack1).size() < 2) return ItemStack.EMPTY;
 
    Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1).entrySet().stream().filter((entry) ->
     !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -139,8 +139,19 @@ public class GrindEnchantments {
 
    if(itemStack2.getItem() == Items.ENCHANTED_BOOK) {
 
+    Map<Enchantment, Integer> stack2 = EnchantmentHelper.get(itemStack2);
+    int level = entry.getValue();
+
+    if(stack2.containsKey(entry.getKey())) {
+
+     level = stack2.get(entry.getKey());
+
+     if(level != entry.getValue() || entry.getValue() == entry.getKey().getMaxLevel()) return ItemStack.EMPTY;
+
+     level += 1;
+    }
     result = itemStack2.copy();
-    EnchantedBookItem.addEnchantment(result, new EnchantmentLevelEntry(entry.getKey(), entry.getValue()));
+    EnchantedBookItem.addEnchantment(result, new EnchantmentLevelEntry(entry.getKey(), level));
    }
    else {
 
@@ -152,8 +163,7 @@ public class GrindEnchantments {
 
    Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1);
    Map.Entry<Enchantment, Integer> enchantment = enchantments.entrySet().stream().filter((entry) ->
-    !(entry.getKey().isCursed() && EnchantmentHelper.getLevel(entry.getKey(), itemStack1) != 0))
-    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet().iterator().next();
+    !entry.getKey().isCursed()) .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet().iterator().next();
    enchantments.remove(enchantment.getKey(), enchantment.getValue());
 
    ItemStack newItemStack1 = new ItemStack(Items.ENCHANTED_BOOK);

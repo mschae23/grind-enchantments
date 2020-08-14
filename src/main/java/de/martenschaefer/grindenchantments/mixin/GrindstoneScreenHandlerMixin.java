@@ -39,7 +39,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
  @Shadow
  private ScreenHandlerContext context;
 
- @Inject(at = @At("HEAD"), method = "updateResult", cancellable = true)
+ @Inject(at = @At("RETURN"), method = "updateResult", cancellable = true)
  private void onUpdateResult(CallbackInfo ci) {
 
   ItemStack itemStack1 = this.input.getStack(0);
