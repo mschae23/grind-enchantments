@@ -1,5 +1,7 @@
 package de.martenschaefer.grindenchantments;
 
+import net.cerulan.fairenchanting.FairEnchanting;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
@@ -19,27 +21,30 @@ public class GrindEnchantments {
 
  public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
 
-  if (Extract.isExtractOperation(itemStack1, itemStack2)) {
+  return getLevelCost(itemStack1, itemStack2, null);
+ }
+ public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player) {
 
-   return Extract.getLevelCost(itemStack1.hasEnchantments() ? itemStack1 : itemStack2);
+  if (Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
+
+   return Disenchant.getLevelCost(itemStack1.hasEnchantments() ? itemStack1 : itemStack2, player);
   }
-  else if (Transfer.isTransferOperation(itemStack1, itemStack2)) {
+  else if (Move.isMoveOperation(itemStack1, itemStack2)) {
 
-   return Transfer.getLevelCost(itemStack1);
+   return Move.getLevelCost(itemStack1, player);
   }
   return 0;
  }
- public static class Extract {
+ public static final class Disenchant {
 
-  private Extract() {
-
+  private Disenchant() {
   }
-  public static boolean isExtractOperation(ItemStack itemStack1, ItemStack itemStack2) {
+  public static boolean isDisenchantOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
    return itemStack1.hasEnchantments() && itemStack2.getItem() == Items.BOOK
            || itemStack2.hasEnchantments() && itemStack1.getItem() == Items.BOOK;
   }
-  public static ItemStack doExtractOperation(ItemStack itemStack1, ItemStack itemStack2) {
+  public static ItemStack doDisenchantOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
    ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
 
@@ -54,7 +59,10 @@ public class GrindEnchantments {
    ItemStack bookItemStack = stack1Book ? itemStack1 : itemStack2;
 
    if (!player.abilities.creativeMode) {
-    player.addExperienceLevels(-getLevelCost(enchantedItemStack));
+    if(FabricLoader.getInstance().isModLoaded("fairenchanting"))
+     player.addExperience(-getLevelCost(enchantedItemStack, player));
+    else
+     player.addExperienceLevels(-getLevelCost(enchantedItemStack, player));
    }
    input.setStack(stack1Book ? 1 : 0, grind(enchantedItemStack));
 
@@ -67,7 +75,7 @@ public class GrindEnchantments {
    }
    world.syncWorldEvent(1042, blockPos, 0);
   }
-  public static int getLevelCost(ItemStack stack) {
+  public static int getLevelCost(ItemStack stack, PlayerEntity player) {
 
    int i = 0;
    Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
@@ -80,6 +88,8 @@ public class GrindEnchantments {
      i += integer;
     }
    }
+
+   if(player != null && FabricLoader.getInstance().isModLoaded("fairenchanting")) i = FairEnchanting.getExperienceCostAtLevel(i, i);
 
    return i;
   }
@@ -120,15 +130,18 @@ public class GrindEnchantments {
    return itemStack;
   }
  }
- public static class Transfer {
+ public static final class Move {
 
-  public static boolean isTransferOperation(ItemStack itemStack1, ItemStack itemStack2) {
+  private Move() {
+  }
+
+  public static boolean isMoveOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
    return itemStack1.getItem() == Items.ENCHANTED_BOOK &&
            (itemStack2.getItem() == Items.ENCHANTED_BOOK ||
                    itemStack2.getItem() == Items.BOOK);
   }
-  public static ItemStack doTransferOperation(ItemStack itemStack1, ItemStack itemStack2) {
+  public static ItemStack doMoveOperation(ItemStack itemStack1, ItemStack itemStack2) {
 
    if(EnchantedBookItem.getEnchantmentTag(itemStack1).size() < 2) return ItemStack.EMPTY;
 
@@ -182,11 +195,14 @@ public class GrindEnchantments {
    }
 
    if (!player.abilities.creativeMode) {
-    player.addExperienceLevels(-GrindEnchantments.getLevelCost(itemStack1, itemStack2));
+    if(FabricLoader.getInstance().isModLoaded("fairenchanting"))
+     player.addExperience(-GrindEnchantments.getLevelCost(itemStack1, itemStack2, player));
+    else
+     player.addExperienceLevels(-GrindEnchantments.getLevelCost(itemStack1, itemStack2, player));
    }
    world.syncWorldEvent(1042, blockPos, 0);
   }
-  public static int getLevelCost(ItemStack itemStack1) {
+  public static int getLevelCost(ItemStack itemStack1, PlayerEntity player) {
 
    int i = 0;
    Map<Enchantment, Integer> map = EnchantmentHelper.get(itemStack1);
@@ -196,6 +212,8 @@ public class GrindEnchantments {
     Enchantment enchantment = entry.getKey();
     if (!enchantment.isCursed()) i++;
    }
+
+   if(player != null && FabricLoader.getInstance().isModLoaded("fairenchanting")) i = FairEnchanting.getExperienceCostAtLevel(i, i);
 
    return (int) (i / 2.0 + 0.5);
   }

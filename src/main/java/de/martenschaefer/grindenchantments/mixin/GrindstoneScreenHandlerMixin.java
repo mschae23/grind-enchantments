@@ -14,13 +14,13 @@ import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,16 +28,20 @@ import java.util.Map.Entry;
 @Mixin(GrindstoneScreenHandler.class)
 public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
+ @Shadow
+ @Final
+ private Inventory input;
+ @Final
+ @Shadow
+ private Inventory result;
+ @Final
+ @Shadow
+ private ScreenHandlerContext context;
+
  protected GrindstoneScreenHandlerMixin(ScreenHandlerType<?> type, int syncId) {
 
   super(type, syncId);
  }
- @Shadow
- private Inventory input;
- @Shadow
- private Inventory result;
- @Shadow
- private ScreenHandlerContext context;
 
  @Inject(at = @At("RETURN"), method = "updateResult", cancellable = true)
  private void onUpdateResult(CallbackInfo ci) {
@@ -45,15 +49,15 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
   ItemStack itemStack1 = this.input.getStack(0);
   ItemStack itemStack2 = this.input.getStack(1);
 
-  if (GrindEnchantments.Extract.isExtractOperation(itemStack1, itemStack2)) {
+  if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
 
-   this.result.setStack(0, GrindEnchantments.Extract.doExtractOperation(itemStack1, itemStack2));
+   this.result.setStack(0, GrindEnchantments.Disenchant.doDisenchantOperation(itemStack1, itemStack2));
    this.sendContentUpdates();
    ci.cancel();
   }
-  else if(GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
+  else if(GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
 
-   ItemStack result = GrindEnchantments.Transfer.doTransferOperation(itemStack1, itemStack2);
+   ItemStack result = GrindEnchantments.Move.doMoveOperation(itemStack1, itemStack2);
 
    if(result == null) return;
 
@@ -102,8 +106,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     ItemStack itemStack1 = input.getStack(0);
     ItemStack itemStack2 = input.getStack(1);
 
-    if (GrindEnchantments.Extract.isExtractOperation(itemStack1, itemStack2) ||
-        GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
+    if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2) ||
+        GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
 
      return (playerEntity.abilities.creativeMode || playerEntity.experienceLevel >=
       GrindEnchantments.getLevelCost(itemStack1, itemStack2));
@@ -117,14 +121,14 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
      ItemStack itemStack1 = input.getStack(0);
      ItemStack itemStack2 = input.getStack(1);
 
-     if (GrindEnchantments.Extract.isExtractOperation(itemStack1, itemStack2)) {
+     if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
 
-      GrindEnchantments.Extract.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
+      GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
       return;
      }
-     else if(GrindEnchantments.Transfer.isTransferOperation(itemStack1, itemStack2)) {
+     else if(GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
 
-      GrindEnchantments.Transfer.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
+      GrindEnchantments.Move.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
       return;
      }
 
@@ -168,8 +172,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
     while (var4.hasNext()) {
      Entry<Enchantment, Integer> entry = var4.next();
-     Enchantment enchantment = (Enchantment) entry.getKey();
-     Integer integer = (Integer) entry.getValue();
+     Enchantment enchantment = entry.getKey();
+     Integer integer = entry.getValue();
      if (!enchantment.isCursed()) {
       i += enchantment.getMinPower(integer);
      }

@@ -6,12 +6,8 @@ import net.minecraft.client.gui.screen.ingame.GrindstoneScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,11 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Iterator;
-import java.util.Map;
-
 @Mixin(HandledScreen.class)
-public class HandledScreenMixin extends Screen {
+public class HandledScreenMixin<T extends ScreenHandler> extends Screen {
 
  @Shadow
  protected PlayerInventory playerInventory;
@@ -34,6 +27,7 @@ public class HandledScreenMixin extends Screen {
 
   super(title);
  }
+
  @Inject(method = "drawForeground", at = @At("TAIL"))
  protected void onDrawForeground(MatrixStack matrices, int mouseX, int mouseY, CallbackInfo ci) {
 
