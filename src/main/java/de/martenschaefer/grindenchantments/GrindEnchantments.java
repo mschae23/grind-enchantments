@@ -1,7 +1,7 @@
 package de.martenschaefer.grindenchantments;
 
-import net.cerulan.fairenchanting.FairEnchanting;
-import net.fabricmc.loader.api.FabricLoader;
+import java.util.Map;
+import java.util.stream.Collectors;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
@@ -13,9 +13,8 @@ import net.minecraft.item.Items;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.Map;
-import java.util.stream.Collectors;
+import net.fabricmc.loader.api.FabricLoader;
+import net.cerulan.fairenchanting.FairEnchanting;
 
 public class GrindEnchantments {
 
@@ -58,7 +57,7 @@ public class GrindEnchantments {
    ItemStack enchantedItemStack = stack1Book ? itemStack2 : itemStack1;
    ItemStack bookItemStack = stack1Book ? itemStack1 : itemStack2;
 
-   if (!player.abilities.creativeMode) {
+   if (!player.getAbilities().creativeMode) {
     if(FabricLoader.getInstance().isModLoaded("fairenchanting"))
      player.addExperience(-getLevelCost(enchantedItemStack, player));
     else
@@ -194,7 +193,7 @@ public class GrindEnchantments {
     input.setStack(1,	newBookItemStack);
    }
 
-   if (!player.abilities.creativeMode) {
+   if (!player.getAbilities().creativeMode) {
     if(FabricLoader.getInstance().isModLoaded("fairenchanting"))
      player.addExperience(-GrindEnchantments.getLevelCost(itemStack1, itemStack2, player));
     else

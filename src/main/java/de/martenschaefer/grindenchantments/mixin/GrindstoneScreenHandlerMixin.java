@@ -1,6 +1,8 @@
 package de.martenschaefer.grindenchantments.mixin;
 
-import de.martenschaefer.grindenchantments.GrindEnchantments;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ExperienceOrbEntity;
@@ -14,6 +16,7 @@ import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
+import de.martenschaefer.grindenchantments.GrindEnchantments;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,9 +24,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 
 @Mixin(GrindstoneScreenHandler.class)
 public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
@@ -109,7 +109,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2) ||
         GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
 
-     return (playerEntity.abilities.creativeMode || playerEntity.experienceLevel >=
+     return (playerEntity.getAbilities().creativeMode || playerEntity.experienceLevel >=
       GrindEnchantments.getLevelCost(itemStack1, itemStack2));
     }
     return true;
@@ -139,8 +139,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
      while (i > 0) {
       int j = ExperienceOrbEntity.roundToOrbSize(i);
       i -= j;
-      world.spawnEntity(new ExperienceOrbEntity(world, (double) blockPos.getX(), (double) blockPos.getY() + 0.5D,
-              (double) blockPos.getZ() + 0.5D, j));
+      world.spawnEntity(new ExperienceOrbEntity(world, blockPos.getX(), blockPos.getY() + 0.5D,
+              blockPos.getZ() + 0.5D, j));
      }
      input.setStack(0, ItemStack.EMPTY);
      input.setStack(1, ItemStack.EMPTY);
