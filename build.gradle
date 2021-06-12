@@ -1,10 +1,10 @@
 plugins {
-	id 'fabric-loom' version '0.5-SNAPSHOT'
+	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = project.archives_base_name
 version = "$project.mod_version+$project.minecraft_version"
@@ -20,7 +20,7 @@ dependencies {
 	mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
 	modImplementation "net.fabricmc:fabric-loader:$project.loader_version"
 
-	modCompile "com.github.CerulanLumina:fair-enchanting:$fairenchanting_version"
+	// modImplementation "com.github.Fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
 }
 
 processResources {
@@ -34,10 +34,8 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
 
-    def targetVersion = 8
-    if (JavaVersion.current().isJava9Compatible()) {
-        it.options.release = targetVersion
-    }
+    // Minecraft 1.17 (21w19a) upwards uses Java 16.
+    it.options.release = 16
 }
 
 java {

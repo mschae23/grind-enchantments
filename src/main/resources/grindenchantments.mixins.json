@@ -4,7 +4,11 @@
   "package": "de.martenschaefer.grindenchantments.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "GrindstoneScreenHandlerMixin"
+    "GrindstoneScreenHandlerAccessor",
+    "GrindstoneScreenHandlerMixin",
+    "GrindstoneScreenHandlerMixin$Anonymous2Mixin",
+    "GrindstoneScreenHandlerMixin$Anonymous3Mixin",
+    "GrindstoneScreenHandlerMixin$Anonymous4Mixin"
   ],
   "client": [
     "HandledScreenMixin"
