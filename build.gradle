@@ -11,7 +11,16 @@ version = "$project.mod_version+$project.minecraft_version"
 group = project.maven_group
 
 repositories {
-	maven { url 'https://jitpack.io' }
+	maven {
+        name 'GitHub Packages Registry (mschae23)'
+        url 'https://maven.pkg.github.com/mschae23/_'
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -20,7 +29,7 @@ dependencies {
 	mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
 	modImplementation "net.fabricmc:fabric-loader:$project.loader_version"
 
-	// modImplementation "com.github.Fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
+	modImplementation "fourmisain:tax-free-levels:$project.tax_free_levels_version"
 }
 
 processResources {
