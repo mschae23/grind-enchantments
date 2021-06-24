@@ -11,7 +11,7 @@
     "GrindstoneScreenHandlerMixin$Anonymous4Mixin"
   ],
   "client": [
-    "HandledScreenMixin"
+    "GrindstoneScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

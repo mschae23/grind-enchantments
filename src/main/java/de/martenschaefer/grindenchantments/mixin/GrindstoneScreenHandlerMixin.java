@@ -111,6 +111,8 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         }
 
         /**
+         * @reason I have to change the lambda expression, but I need the player too, which isn't passed to
+         * the synthetic method for it.
          * @author mschae23
          */
         @Overwrite
