@@ -91,8 +91,8 @@ public class GrindEnchantments {
 
         private static ItemStack grind(ItemStack item) {
             ItemStack itemStack = item.copy();
-            itemStack.removeSubTag("Enchantments");
-            itemStack.removeSubTag("StoredEnchantments");
+            itemStack.removeSubNbt("Enchantments");
+            itemStack.removeSubNbt("StoredEnchantments");
 
             Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream().filter((entry) ->
                 entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
