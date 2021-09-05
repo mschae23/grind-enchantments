@@ -19,6 +19,9 @@
 
   "environment": "*",
   "entrypoints": {
+    "main": [
+      "de.martenschaefer.grindenchantments.GrindEnchantmentsMod"
+    ]
   },
   "mixins": [
     "grindenchantments.mixins.json"
