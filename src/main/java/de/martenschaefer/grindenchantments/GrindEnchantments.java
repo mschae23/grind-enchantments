@@ -14,21 +14,34 @@ import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.fabricmc.loader.api.FabricLoader;
+import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
+import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
 import fourmisain.taxfreelevels.TaxFreeLevels;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
-        return getLevelCost(itemStack1, itemStack2, null);
-    }
+        GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+        ItemStack stack;
+        EnchantmentCostConfig costConfig;
 
-    public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2, @SuppressWarnings("unused") PlayerEntity player) {
         if (Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-            return Disenchant.getLevelCost(itemStack1.hasEnchantments() ? itemStack1 : itemStack2);
+            stack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
+            costConfig = config.disenchant().costConfig();
         } else if (Move.isMoveOperation(itemStack1, itemStack2)) {
-            return Move.getLevelCost(itemStack1);
+            stack = itemStack1;
+            costConfig = config.move().costConfig();
+        } else {
+            return 0;
         }
 
-        return 0;
+        return getLevelCost(stack, costConfig);
+    }
+
+    public static int getLevelCost(ItemStack stack, EnchantmentCostConfig config) {
+        Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(stack);
+        double cost = config.countMode().getCost(enchantments.entrySet());
+
+        return (int) (cost * config.costFactor() + config.costOffset());
     }
 
     public static final class Disenchant {
@@ -57,10 +70,12 @@ public class GrindEnchantments {
             ItemStack bookItemStack = stack1Book ? itemStack1 : itemStack2;
 
             if (!player.getAbilities().creativeMode) {
+                int cost = getLevelCost(enchantedItemStack, bookItemStack);
+
                 if (FabricLoader.getInstance().isModLoaded("taxfreelevels"))
-                    player.addExperience(-TaxFreeLevels.getXpDifference(player, 0, getLevelCost(enchantedItemStack)));
+                    player.addExperience(-TaxFreeLevels.getXpDifference(player, 0, cost));
                 else
-                    player.addExperienceLevels(-getLevelCost(enchantedItemStack));
+                    player.addExperienceLevels(-cost);
             }
             input.setStack(stack1Book ? 1 : 0, grind(enchantedItemStack));
 
@@ -72,21 +87,6 @@ public class GrindEnchantments {
             }
 
             world.syncWorldEvent(1042, blockPos, 0);
-        }
-
-        public static int getLevelCost(ItemStack stack) {
-            int i = 0;
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
-
-            for (Map.Entry<Enchantment, Integer> entry : map.entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                Integer integer = entry.getValue();
-                if (!enchantment.isCursed()) {
-                    i += integer;
-                }
-            }
-
-            return i;
         }
 
         private static ItemStack grind(ItemStack item) {
@@ -190,24 +190,12 @@ public class GrindEnchantments {
             if (!player.getAbilities().creativeMode) {
                 if (FabricLoader.getInstance().isModLoaded("taxfreelevels"))
                     player.addExperience(-TaxFreeLevels.getXpDifference(player, 0,
-                        GrindEnchantments.getLevelCost(itemStack1, itemStack2, player)));
+                        GrindEnchantments.getLevelCost(itemStack1, itemStack2)));
                 else
-                    player.addExperienceLevels(-GrindEnchantments.getLevelCost(itemStack1, itemStack2, player));
+                    player.addExperienceLevels(-GrindEnchantments.getLevelCost(itemStack1, itemStack2));
             }
 
             world.syncWorldEvent(1042, blockPos, 0);
-        }
-
-        public static int getLevelCost(ItemStack stack) {
-            int i = 0;
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
-
-            for (Map.Entry<Enchantment, Integer> entry : map.entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                if (!enchantment.isCursed()) i++;
-            }
-
-            return (int) (i / 2.0 + 0.5);
         }
     }
 }

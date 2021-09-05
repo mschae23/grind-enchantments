@@ -27,7 +27,6 @@ import com.mojang.serialization.JsonOps;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
@@ -36,8 +35,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static final Path CONFIG_PATH = Paths.get(MODID + ".json");
 
-    @Nullable
-    private static GrindEnchantmentsConfig CONFIG = null;
+    private static GrindEnchantmentsConfig CONFIG = GrindEnchantmentsConfig.DEFAULT;
 
     @Override
     public void onInitialize() {
@@ -50,8 +48,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
                 CONFIG = decodeConfig(input);
             } catch (IOException e) {
                 LOGGER.log(Level.ERROR, "IO exception while trying to read config: " + e.getLocalizedMessage());
-
-                CONFIG = GrindEnchantmentsConfig.DEFAULT;
             }
         } else {
             try (OutputStream output = Files.newOutputStream(configPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
@@ -92,10 +88,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
     }
 
     public static GrindEnchantmentsConfig getConfig() {
-        if (CONFIG == null) {
-            throw new NullPointerException("Grind Enchantments config is null");
-        }
-
         return CONFIG;
     }
 

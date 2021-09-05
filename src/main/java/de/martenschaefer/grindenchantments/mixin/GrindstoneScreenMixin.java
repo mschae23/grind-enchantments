@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.text.Text;
 import de.martenschaefer.grindenchantments.GrindEnchantments;
+import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GrindstoneScreen.class)
@@ -20,6 +21,9 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
     @Override
     protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
         super.drawForeground(matrices, mouseX, mouseY);
+
+        if (!GrindEnchantmentsMod.getConfig().showCost())
+            return; // Don't show the enchantment cost
 
         int i = GrindEnchantments.getLevelCost(this.handler.getSlot(0).getStack(), this.handler.getSlot(1).getStack());
 

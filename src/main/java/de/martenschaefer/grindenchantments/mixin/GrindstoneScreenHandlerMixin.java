@@ -1,9 +1,5 @@
 package de.martenschaefer.grindenchantments.mixin;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
@@ -99,7 +95,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     }
 
     @Mixin(targets = "net/minecraft/screen/GrindstoneScreenHandler$4")
-    public static class Anonymous4Mixin extends Slot {
+    public static abstract class Anonymous4Mixin extends Slot {
         @Shadow
         private ScreenHandlerContext field_16779;
         @Shadow
@@ -117,30 +113,30 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
          */
         @Overwrite
         public void onTakeItem(PlayerEntity player, ItemStack stack) {
-            this.field_16779.run((world, blockPos) -> {
+            this.field_16779.run((world, pos) -> {
                 Inventory input = ((GrindstoneScreenHandlerAccessor) this.field_16780).getInput();
 
                 ItemStack itemStack1 = input.getStack(0);
                 ItemStack itemStack2 = input.getStack(1);
 
                 if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
+                    GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, player, input, world, pos);
                     return;
                 } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Move.takeResult(itemStack1, itemStack2, player, input, world, blockPos);
+                    GrindEnchantments.Move.takeResult(itemStack1, itemStack2, player, input, world, pos);
                     return;
                 }
 
                 // Vanilla Grindstone take item logic
 
                 if (world instanceof ServerWorld) {
-                    ExperienceOrbEntity.spawn((ServerWorld)world, Vec3d.ofCenter(blockPos), this.getExperience(world));
+                    ExperienceOrbEntity.spawn((ServerWorld) world, Vec3d.ofCenter(pos), this.getExperience(world));
                 }
+
+                world.syncWorldEvent(1042, pos, 0);
 
                 input.setStack(0, ItemStack.EMPTY);
                 input.setStack(1, ItemStack.EMPTY);
-
-                world.syncWorldEvent(1042, blockPos, 0);
             });
         }
 
@@ -164,33 +160,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
             return true;
         }
 
-        private int getExperience(World world) {
-            Inventory input = ((GrindstoneScreenHandlerAccessor) this.field_16780).getInput();
-
-            int ix = 0;
-            int i = ix + this.getExperience(input.getStack(0));
-            i += this.getExperience(input.getStack(1));
-            if (i > 0) {
-                int j = (int) Math.ceil((double) i / 2.0D);
-                return j + world.random.nextInt(j);
-            } else {
-                return 0;
-            }
-        }
-
-        private int getExperience(ItemStack stack) {
-            int i = 0;
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(stack);
-
-            for (Entry<Enchantment, Integer> entry : map.entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                Integer integer = entry.getValue();
-                if (!enchantment.isCursed()) {
-                    i += enchantment.getMinPower(integer);
-                }
-            }
-
-            return i;
-        }
+        @Shadow
+        public abstract int getExperience(World world);
     }
 }
