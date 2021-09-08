@@ -43,20 +43,24 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
         if (Files.exists(configPath) && Files.isRegularFile(configPath)) {
             try (InputStream input = Files.newInputStream(configPath)) {
-                LOGGER.log(Level.INFO, "Reading config.");
+                log(Level.INFO, "Reading config.");
 
                 CONFIG = decodeConfig(input);
             } catch (IOException e) {
-                LOGGER.log(Level.ERROR, "IO exception while trying to read config: " + e.getLocalizedMessage());
+                log(Level.ERROR, "IO exception while trying to read config: " + e.getLocalizedMessage());
+            } catch (RuntimeException e) {
+                log(Level.ERROR, e.getLocalizedMessage());
             }
         } else {
             try (OutputStream output = Files.newOutputStream(configPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
                  OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(output))) {
-                LOGGER.log(Level.INFO, "Writing default config.");
+                log(Level.INFO, "Writing default config.");
 
                 encodeConfig(writer);
             } catch (IOException e) {
-                LOGGER.log(Level.ERROR, "IO exception while trying to write config: " + e.getLocalizedMessage());
+                log(Level.ERROR, "IO exception while trying to write config: " + e.getLocalizedMessage());
+            } catch (RuntimeException e) {
+                log(Level.ERROR, e.getLocalizedMessage());
             }
         }
     }
@@ -89,6 +93,10 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static GrindEnchantmentsConfig getConfig() {
         return CONFIG;
+    }
+
+    public static void log(Level level, Object message) {
+        LOGGER.log(level, "[Grind Enchantments] " + message);
     }
 
     public static Identifier id(String path) {
