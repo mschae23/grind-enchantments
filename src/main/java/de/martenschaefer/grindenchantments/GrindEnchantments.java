@@ -59,9 +59,7 @@ public class GrindEnchantments {
         public static ItemStack doDisenchantOperation(ItemStack itemStack1, ItemStack itemStack2) {
             ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
 
-            ItemStack result = new ItemStack(Items.ENCHANTED_BOOK);
-            result = transferEnchantmentsToBook(result, enchantedItemStack);
-            return result;
+            return transferEnchantmentsToBook(enchantedItemStack);
         }
 
         public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
@@ -77,9 +75,11 @@ public class GrindEnchantments {
                 else
                     player.addExperienceLevels(-cost);
             }
-            input.setStack(stack1Book ? 1 : 0, grind(enchantedItemStack));
+            input.setStack(stack1Book ? 1 : 0, GrindEnchantmentsMod.getConfig().disenchant().consumeItem() ?
+                ItemStack.EMPTY : grind(enchantedItemStack));
 
-            if (bookItemStack.getCount() == 1) input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
+            if (bookItemStack.getCount() == 1)
+                input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
             else {
                 ItemStack bookNew = bookItemStack.copy();
                 bookNew.setCount(bookItemStack.getCount() - 1);
@@ -94,8 +94,10 @@ public class GrindEnchantments {
             itemStack.removeSubNbt("Enchantments");
             itemStack.removeSubNbt("StoredEnchantments");
 
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream().filter((entry) ->
-                entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream()
+                .filter(entry -> entry.getKey().isCursed())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
             EnchantmentHelper.set(map, itemStack);
             itemStack.setRepairCost(0);
 
@@ -112,10 +114,15 @@ public class GrindEnchantments {
             return itemStack;
         }
 
-        public static ItemStack transferEnchantmentsToBook(ItemStack target, ItemStack source) {
-            ItemStack itemStack = target.copy();
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(source).entrySet().stream().filter((entry) ->
-                !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        public static ItemStack transferEnchantmentsToBook(ItemStack source) {
+            ItemStack itemStack = new ItemStack(Items.ENCHANTED_BOOK);
+
+            Map<Enchantment, Integer> map = EnchantmentHelper.get(source).entrySet().stream()
+                .filter(entry -> !entry.getKey().isCursed())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            if (map.isEmpty())
+                return ItemStack.EMPTY;
 
             for (Map.Entry<Enchantment, Integer> entry : map.entrySet()) {
                 EnchantedBookItem.addEnchantment(itemStack, new EnchantmentLevelEntry(entry.getKey(), entry.getValue()));
@@ -139,10 +146,13 @@ public class GrindEnchantments {
         }
 
         public static ItemStack doMoveOperation(ItemStack itemStack1, ItemStack itemStack2) {
-            if (EnchantedBookItem.getEnchantmentNbt(itemStack1).size() < 2) return ItemStack.EMPTY;
+            Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1).entrySet().stream()
+                .filter(entry -> !entry.getKey().isCursed())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1).entrySet().stream().filter((entry) ->
-                !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if (enchantments.size() < 2)
+                return ItemStack.EMPTY;
+
             Map.Entry<Enchantment, Integer> entry = enchantments.entrySet().iterator().next();
             ItemStack result;
 
