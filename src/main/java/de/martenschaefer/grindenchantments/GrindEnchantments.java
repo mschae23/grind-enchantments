@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 import net.fabricmc.loader.api.FabricLoader;
 import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
 import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
-import fourmisain.taxfreelevels.TaxFreeLevels;
+import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
@@ -71,7 +71,7 @@ public class GrindEnchantments {
                 int cost = getLevelCost(enchantedItemStack, bookItemStack);
 
                 if (FabricLoader.getInstance().isModLoaded("taxfreelevels"))
-                    player.addExperience(-TaxFreeLevels.getXpDifference(player, 0, cost));
+                    TaxFreeLevels.applyFlattenedXpCost(player, cost);
                 else
                     player.addExperienceLevels(-cost);
             }
@@ -199,8 +199,7 @@ public class GrindEnchantments {
 
             if (!player.getAbilities().creativeMode) {
                 if (FabricLoader.getInstance().isModLoaded("taxfreelevels"))
-                    player.addExperience(-TaxFreeLevels.getXpDifference(player, 0,
-                        GrindEnchantments.getLevelCost(itemStack1, itemStack2)));
+                    TaxFreeLevels.applyFlattenedXpCost(player, GrindEnchantments.getLevelCost(itemStack1, itemStack2));
                 else
                     player.addExperienceLevels(-GrindEnchantments.getLevelCost(itemStack1, itemStack2));
             }
