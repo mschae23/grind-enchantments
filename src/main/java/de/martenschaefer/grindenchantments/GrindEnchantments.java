@@ -1,7 +1,10 @@
 package de.martenschaefer.grindenchantments;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
@@ -34,14 +37,23 @@ public class GrindEnchantments {
             return 0;
         }
 
-        return getLevelCost(stack, costConfig);
+        return getLevelCost(stack, costConfig, config.allowCurses());
     }
 
-    public static int getLevelCost(ItemStack stack, EnchantmentCostConfig config) {
+    public static int getLevelCost(ItemStack stack, EnchantmentCostConfig config, boolean allowCurses) {
         Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(stack);
-        double cost = config.countMode().getCost(enchantments.entrySet());
+        double cost = config.countMode().getCost(enchantments.entrySet(), allowCurses);
 
         return (int) (cost * config.costFactor() + config.costOffset());
+    }
+
+    public static Map<Enchantment, Integer> getEnchantments(ItemStack stack, boolean allowCurses) {
+        Stream<Map.Entry<Enchantment, Integer>> enchantments = EnchantmentHelper.get(stack).entrySet().stream();
+
+        if (!allowCurses) // Don't transfer curses if it isn't enabled in the config
+            enchantments = enchantments.filter(entry -> !entry.getKey().isCursed());
+
+        return enchantments.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static final class Disenchant {
@@ -59,10 +71,12 @@ public class GrindEnchantments {
         public static ItemStack doDisenchantOperation(ItemStack itemStack1, ItemStack itemStack2) {
             ItemStack enchantedItemStack = itemStack1.hasEnchantments() ? itemStack1 : itemStack2;
 
-            return transferEnchantmentsToBook(enchantedItemStack);
+            return transferEnchantmentsToBook(enchantedItemStack, GrindEnchantmentsMod.getConfig().allowCurses());
         }
 
         public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
+            GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+
             boolean stack1Book = itemStack1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? itemStack2 : itemStack1;
             ItemStack bookItemStack = stack1Book ? itemStack1 : itemStack2;
@@ -75,8 +89,8 @@ public class GrindEnchantments {
                 else
                     player.addExperienceLevels(-cost);
             }
-            input.setStack(stack1Book ? 1 : 0, GrindEnchantmentsMod.getConfig().disenchant().consumeItem() ?
-                ItemStack.EMPTY : grind(enchantedItemStack));
+            input.setStack(stack1Book ? 1 : 0, config.disenchant().consumeItem() ?
+                ItemStack.EMPTY : grind(enchantedItemStack, config.allowCurses()));
 
             if (bookItemStack.getCount() == 1)
                 input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
@@ -89,14 +103,19 @@ public class GrindEnchantments {
             world.syncWorldEvent(1042, blockPos, 0);
         }
 
-        private static ItemStack grind(ItemStack item) {
+        private static ItemStack grind(ItemStack item, boolean allowCurses) {
             ItemStack itemStack = item.copy();
             itemStack.removeSubNbt("Enchantments");
             itemStack.removeSubNbt("StoredEnchantments");
 
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(item).entrySet().stream()
-                .filter(entry -> entry.getKey().isCursed())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Stream<Map.Entry<Enchantment, Integer>> enchantmentStream = EnchantmentHelper.get(item).entrySet().stream();
+
+            if (allowCurses) // Remove all enchantments
+                enchantmentStream = Stream.empty();
+            else // Remove all enchantments that are not curses
+                enchantmentStream = enchantmentStream.filter(entry -> entry.getKey().isCursed());
+
+            Map<Enchantment, Integer> map = enchantmentStream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
             EnchantmentHelper.set(map, itemStack);
             itemStack.setRepairCost(0);
@@ -114,12 +133,10 @@ public class GrindEnchantments {
             return itemStack;
         }
 
-        public static ItemStack transferEnchantmentsToBook(ItemStack source) {
+        public static ItemStack transferEnchantmentsToBook(ItemStack source, boolean allowCurses) {
             ItemStack itemStack = new ItemStack(Items.ENCHANTED_BOOK);
 
-            Map<Enchantment, Integer> map = EnchantmentHelper.get(source).entrySet().stream()
-                .filter(entry -> !entry.getKey().isCursed())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Enchantment, Integer> map = getEnchantments(source, allowCurses);
 
             if (map.isEmpty())
                 return ItemStack.EMPTY;
@@ -146,14 +163,15 @@ public class GrindEnchantments {
         }
 
         public static ItemStack doMoveOperation(ItemStack itemStack1, ItemStack itemStack2) {
-            Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1).entrySet().stream()
-                .filter(entry -> !entry.getKey().isCursed())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            boolean allowCurses = GrindEnchantmentsMod.getConfig().allowCurses();
 
-            if (enchantments.size() < 2)
+            List<Map.Entry<Enchantment, Integer>> firstEnchantments = EnchantmentHelper.get(itemStack1).entrySet().stream()
+                .filter(entry -> allowCurses || !entry.getKey().isCursed()).limit(2).toList();
+
+            if (firstEnchantments.size() < 2)
                 return ItemStack.EMPTY;
 
-            Map.Entry<Enchantment, Integer> entry = enchantments.entrySet().iterator().next();
+            Map.Entry<Enchantment, Integer> entry = firstEnchantments.get(0);
             ItemStack result;
 
             if (itemStack2.getItem() == Items.ENCHANTED_BOOK) {
@@ -179,9 +197,16 @@ public class GrindEnchantments {
         }
 
         public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
+            boolean allowCurses = GrindEnchantmentsMod.getConfig().allowCurses();
+
             Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1);
-            Map.Entry<Enchantment, Integer> enchantment = enchantments.entrySet().stream().filter((entry) ->
-                !entry.getKey().isCursed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet().iterator().next();
+            Optional<Map.Entry<Enchantment, Integer>> enchantmentOptional = enchantments.entrySet().stream().filter(entry ->
+                allowCurses || !entry.getKey().isCursed()).findFirst();
+
+            if (enchantmentOptional.isEmpty())
+                return;
+
+            Map.Entry<Enchantment, Integer> enchantment = enchantmentOptional.get();
             enchantments.remove(enchantment.getKey(), enchantment.getValue());
 
             ItemStack newItemStack1 = new ItemStack(Items.ENCHANTED_BOOK);

@@ -9,34 +9,8 @@ import net.minecraft.util.StringIdentifiable;
 import com.mojang.serialization.Codec;
 
 public enum EnchantmentCountModes implements EnchantmentCountMode, StringIdentifiable {
-    COUNT_ENCHANTMENTS("count_enchantments") {
-        @Override
-        public double getCost(Set<Map.Entry<Enchantment, Integer>> enchantments) {
-            int i = 0;
-
-            for (Map.Entry<Enchantment, Integer> entry : enchantments) {
-                Enchantment enchantment = entry.getKey();
-
-                if (!enchantment.isCursed()) i++;
-            }
-
-            return i;
-        }
-    },
-    COUNT_LEVELS("count_levels") {
-        @Override
-        public double getCost(Set<Map.Entry<Enchantment, Integer>> enchantments) {
-            int i = 0;
-
-            for (Map.Entry<Enchantment, Integer> entry : enchantments) {
-                Enchantment enchantment = entry.getKey();
-
-                if (!enchantment.isCursed()) i += entry.getValue();
-            }
-
-            return i;
-        }
-    };
+    COUNT_ENCHANTMENTS("count_enchantments", (acc, enchantment, level) -> acc + 1),
+    COUNT_LEVELS("count_levels", (acc, enchantment, level) -> acc + level);
 
     public static final Codec<EnchantmentCountModes> CODEC =
         StringIdentifiable.createCodec(EnchantmentCountModes::values, EnchantmentCountModes::byName);
@@ -44,13 +18,20 @@ public enum EnchantmentCountModes implements EnchantmentCountMode, StringIdentif
         .collect(Collectors.toMap(EnchantmentCountModes::getName, category -> category));
 
     private final String name;
+    private final EnchantmentCountMode.ReduceFunction function;
 
-    EnchantmentCountModes(String name) {
+    EnchantmentCountModes(String name, EnchantmentCountMode.ReduceFunction function) {
         this.name = name;
+        this.function = function;
     }
 
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public double getCost(Set<Map.Entry<Enchantment, Integer>> enchantments, boolean allowCurses) {
+        return EnchantmentCountMode.reduce(enchantments, this.function, allowCurses);
     }
 
     public static EnchantmentCountModes byName(String name) {

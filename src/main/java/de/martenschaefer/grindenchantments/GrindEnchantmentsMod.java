@@ -67,7 +67,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     private static GrindEnchantmentsConfig decodeConfig(InputStream input) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(input))) {
-            JsonElement element = new JsonParser().parse(reader);
+            JsonElement element = JsonParser.parseReader(reader);
 
             Either<GrindEnchantmentsConfig, DataResult.PartialResult<GrindEnchantmentsConfig>> result =
                 GrindEnchantmentsConfig.CODEC.parse(JsonOps.INSTANCE, element).get();
@@ -87,7 +87,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
         });
 
         String json = GSON.toJson(element);
-
         writer.append(json);
     }
 
