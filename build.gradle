@@ -1,6 +1,6 @@
 plugins {
-	id 'fabric-loom' version '0.11-SNAPSHOT'
-	id 'maven-publish'
+    id 'fabric-loom' version '0.11-SNAPSHOT'
+    id 'maven-publish'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -11,16 +11,16 @@ version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 repositories {
-	maven { url 'https://jitpack.io' }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:$project.minecraft_version"
-	mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
-	modImplementation "net.fabricmc:fabric-loader:$project.loader_version"
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:$project.minecraft_version"
+    mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
+    modImplementation "net.fabricmc:fabric-loader:$project.loader_version"
 
-	modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
+    modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
 }
 
 processResources {
@@ -33,7 +33,7 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
-    it.options.release = 17
+    it.options.release = 16 // Java 16 for 1.17 compatibility
 }
 
 java {

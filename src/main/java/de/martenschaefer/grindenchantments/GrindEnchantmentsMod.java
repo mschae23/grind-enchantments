@@ -65,9 +65,10 @@ public class GrindEnchantmentsMod implements ModInitializer {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private static GrindEnchantmentsConfig decodeConfig(InputStream input) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(input))) {
-            JsonElement element = JsonParser.parseReader(reader);
+            JsonElement element = new JsonParser().parse(reader); // Using this for 1.17 compatibility, would be JsonReader.parseReader in 1.18+
 
             Either<GrindEnchantmentsConfig, DataResult.PartialResult<GrindEnchantmentsConfig>> result =
                 GrindEnchantmentsConfig.CODEC.parse(JsonOps.INSTANCE, element).get();
