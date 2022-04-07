@@ -2,6 +2,7 @@ package de.martenschaefer.grindenchantments.mixin;
 
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -32,8 +34,16 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     @Shadow
     private Inventory result;
 
+    @Unique
+    private PlayerEntity player;
+
     protected GrindstoneScreenHandlerMixin(ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
+    }
+
+    @Inject(at = @At("RETURN"), method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V")
+    private void onReturnConstructor(int syncId, PlayerInventory playerInventory, final ScreenHandlerContext context, CallbackInfo ci) {
+        this.player = playerInventory.player;
     }
 
     @Inject(at = @At("RETURN"), method = "updateResult", cancellable = true)
@@ -41,12 +51,16 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         ItemStack itemStack1 = this.input.getStack(0);
         ItemStack itemStack2 = this.input.getStack(1);
 
+        // PlayerEntity player = ((PlayerInventory) this.slots.get(3).inventory).player;
+        PlayerEntity player = this.player;
+
         if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-            this.result.setStack(0, GrindEnchantments.Disenchant.doDisenchantOperation(itemStack1, itemStack2));
+
+            this.result.setStack(0, GrindEnchantments.Disenchant.doDisenchantOperation(itemStack1, itemStack2, player));
             this.sendContentUpdates();
             ci.cancel();
         } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-            ItemStack result = GrindEnchantments.Move.doMoveOperation(itemStack1, itemStack2);
+            ItemStack result = GrindEnchantments.Move.doMoveOperation(itemStack1, itemStack2, player);
 
             if (result == null) return;
 
@@ -120,10 +134,10 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
                 ItemStack itemStack2 = input.getStack(1);
 
                 if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, player, input, world, pos);
+                    GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
                     return;
                 } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Move.takeResult(itemStack1, itemStack2, player, input, world, pos);
+                    GrindEnchantments.Move.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
                     return;
                 }
 
@@ -150,14 +164,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
             ItemStack itemStack1 = input.getStack(0);
             ItemStack itemStack2 = input.getStack(1);
 
-            if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2) ||
-                GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-
-                return (playerEntity.getAbilities().creativeMode || playerEntity.experienceLevel >=
-                    GrindEnchantments.getLevelCost(itemStack1, itemStack2));
-            }
-
-            return true;
+            return GrindEnchantments.canTakeResult(itemStack1, itemStack2, () -> GrindEnchantments.getLevelCost(itemStack1, itemStack2), playerEntity);
         }
 
         @Shadow
