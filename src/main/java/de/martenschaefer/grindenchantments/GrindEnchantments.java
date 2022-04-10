@@ -79,6 +79,8 @@ public class GrindEnchantments {
 
         NbtCompound display = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
 
+        // TODO Add level cost as separate tag instead of adding it as lore, to make removing it more reliable
+        // (will require mixin to ItemStack#getTooltip, which (optionally) has the player as well)
         NbtList lore;
 
         if (display.getType(ItemStack.LORE_KEY) == NbtElement.LIST_TYPE) {

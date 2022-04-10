@@ -10,7 +10,7 @@ public record GrindEnchantmentsConfig(DisenchantConfig disenchant, MoveConfig mo
         MoveConfig.CODEC.fieldOf("move_enchantments").forGetter(GrindEnchantmentsConfig::move),
         Codec.BOOL.orElse(Boolean.FALSE).fieldOf("allow_removing_curses").forGetter(GrindEnchantmentsConfig::allowCurses),
         Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(GrindEnchantmentsConfig::showCost),
-        DedicatedServerConfig.CODEC.optionalFieldOf("dedicated_server_options", DedicatedServerConfig.DEFAULT).forGetter(GrindEnchantmentsConfig::dedicatedServerConfig)
+        DedicatedServerConfig.CODEC.orElse(DedicatedServerConfig.DEFAULT).fieldOf("dedicated_server_options").forGetter(GrindEnchantmentsConfig::dedicatedServerConfig)
     ).apply(instance, instance.stable(GrindEnchantmentsConfig::new)));
 
     public static final GrindEnchantmentsConfig DEFAULT =
