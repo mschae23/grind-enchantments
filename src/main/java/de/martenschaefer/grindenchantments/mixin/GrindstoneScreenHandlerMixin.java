@@ -1,6 +1,5 @@
 package de.martenschaefer.grindenchantments.mixin;
 
-import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -11,13 +10,10 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.world.WorldEvents;
 import de.martenschaefer.grindenchantments.GrindEnchantments;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -74,7 +70,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     public static class Anonymous2Mixin extends Slot {
         @Shadow
         @Final
-        private GrindstoneScreenHandler field_16777;
+        GrindstoneScreenHandler field_16777;
 
         public Anonymous2Mixin(Inventory inventory, int index, int x, int y) {
             super(inventory, index, x, y);
@@ -93,7 +89,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     public static class Anonymous3Mixin extends Slot {
         @Shadow
         @Final
-        private GrindstoneScreenHandler field_16778;
+        GrindstoneScreenHandler field_16778;
 
         public Anonymous3Mixin(Inventory inventory, int index, int x, int y) {
             super(inventory, index, x, y);
@@ -110,49 +106,71 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
     @Mixin(targets = "net/minecraft/screen/GrindstoneScreenHandler$4")
     public static abstract class Anonymous4Mixin extends Slot {
+        @Final
         @Shadow
-        private ScreenHandlerContext field_16779;
+        ScreenHandlerContext field_16779;
         @Shadow
         @Final
-        private GrindstoneScreenHandler field_16780;
+        GrindstoneScreenHandler field_16780;
 
         public Anonymous4Mixin(Inventory inventory, int index, int x, int y) {
             super(inventory, index, x, y);
         }
 
-        /**
-         * @reason I have to change the lambda expression, but I need the player too, which isn't passed to
-         * the synthetic method for it.
-         * @author mschae23
-         */
-        @Overwrite
-        public void onTakeItem(PlayerEntity player, ItemStack stack) {
-            this.field_16779.run((world, pos) -> {
-                Inventory input = ((GrindstoneScreenHandlerAccessor) this.field_16780).getInput();
+        @Inject(method = "onTakeItem", at = @At("HEAD"), cancellable = true)
+        private void onTakeResult(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
+            Inventory input = ((GrindstoneScreenHandlerAccessor) this.field_16780).getInput();
 
-                ItemStack itemStack1 = input.getStack(0);
-                ItemStack itemStack2 = input.getStack(1);
+            ItemStack itemStack1 = input.getStack(0);
+            ItemStack itemStack2 = input.getStack(1);
 
-                if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
-                    return;
-                } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-                    GrindEnchantments.Move.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
-                    return;
-                }
+            boolean success = false;
 
-                // Vanilla Grindstone take item logic
+            if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
+                success = GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, stack, player, input);
+            } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
+                success = GrindEnchantments.Move.takeResult(itemStack1, itemStack2, stack, player, input);
+            }
 
-                if (world instanceof ServerWorld) {
-                    ExperienceOrbEntity.spawn((ServerWorld) world, Vec3d.ofCenter(pos), this.getExperience(world));
-                }
-
-                world.syncWorldEvent(1042, pos, 0);
-
-                input.setStack(0, ItemStack.EMPTY);
-                input.setStack(1, ItemStack.EMPTY);
-            });
+            if (success) {
+                this.field_16779.run((world, pos) -> world.syncWorldEvent(WorldEvents.GRINDSTONE_USED, pos, 0)); // Plays grindstone sound
+                ci.cancel();
+            }
         }
+
+        // /**
+        //  * @reason I have to change the lambda expression, but I need the player too, which isn't passed to
+        //  * the synthetic method for it.
+        //  * @author mschae23
+        //  */
+        // @Overwrite
+        // public void onTakeItem(PlayerEntity player, ItemStack stack) {
+        //     this.field_16779.run((world, pos) -> {
+        //         Inventory input = ((GrindstoneScreenHandlerAccessor) this.field_16780).getInput();
+        //
+        //         ItemStack itemStack1 = input.getStack(0);
+        //         ItemStack itemStack2 = input.getStack(1);
+        //
+        //         if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
+        //             GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
+        //             return;
+        //         } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
+        //             GrindEnchantments.Move.takeResult(itemStack1, itemStack2, stack, player, input, world, pos);
+        //             return;
+        //         }
+        //
+        //         // Vanilla Grindstone take item logic
+        //
+        //         if (world instanceof ServerWorld) {
+        //             ExperienceOrbEntity.spawn((ServerWorld) world, Vec3d.ofCenter(pos), this.getExperience(world));
+        //         }
+        //
+        //         world.syncWorldEvent(1042, pos, 0);
+        //
+        //         input.setStack(0, ItemStack.EMPTY);
+        //         input.setStack(1, ItemStack.EMPTY);
+        //     });
+        // }
 
         /**
          * @author mschae23
@@ -166,8 +184,5 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
             return GrindEnchantments.canTakeResult(itemStack1, itemStack2, () -> GrindEnchantments.getLevelCost(itemStack1, itemStack2), playerEntity);
         }
-
-        @Shadow
-        public abstract int getExperience(World world);
     }
 }

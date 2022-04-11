@@ -23,8 +23,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.fabricmc.loader.api.FabricLoader;
 import de.martenschaefer.grindenchantments.config.DedicatedServerConfig;
 import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
@@ -104,6 +102,7 @@ public class GrindEnchantments {
      * @param stack mutable; same instance will be returned
      * @return the {@code stack} argument
      */
+    @SuppressWarnings("UnusedReturnValue")
     public static ItemStack removeLevelCostLore(ItemStack stack) {
         // TODO Relies on ItemStacks being mutable AND the stack not being copied into the player inventory before calling this method
 
@@ -176,7 +175,7 @@ public class GrindEnchantments {
             );
         }
 
-        public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, ItemStack resultStack, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
+        public static boolean takeResult(ItemStack itemStack1, ItemStack itemStack2, ItemStack resultStack, PlayerEntity player, Inventory input) {
             GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
 
             boolean stack1Book = itemStack1.getItem() == Items.BOOK;
@@ -206,7 +205,7 @@ public class GrindEnchantments {
                 removeLevelCostLore(resultStack);
             }
 
-            world.syncWorldEvent(1042, blockPos, 0);
+            return true;
         }
 
         private static ItemStack grind(ItemStack item, boolean allowCurses) {
@@ -305,7 +304,7 @@ public class GrindEnchantments {
             return addLevelCostLore(result, levelCost, canTakeResult(itemStack1, itemStack2, levelCost, player), config.dedicatedServerConfig());
         }
 
-        public static void takeResult(ItemStack itemStack1, ItemStack itemStack2, ItemStack resultStack, PlayerEntity player, Inventory input, World world, BlockPos blockPos) {
+        public static boolean takeResult(ItemStack itemStack1, ItemStack itemStack2, ItemStack resultStack, PlayerEntity player, Inventory input) {
             boolean allowCurses = GrindEnchantmentsMod.getConfig().allowCurses();
 
             Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack1);
@@ -313,7 +312,7 @@ public class GrindEnchantments {
                 allowCurses || !entry.getKey().isCursed()).findFirst();
 
             if (enchantmentOptional.isEmpty())
-                return;
+                return false;
 
             Map.Entry<Enchantment, Integer> enchantment = enchantmentOptional.get();
             enchantments.remove(enchantment.getKey(), enchantment.getValue());
@@ -342,7 +341,7 @@ public class GrindEnchantments {
                 removeLevelCostLore(resultStack);
             }
 
-            world.syncWorldEvent(1042, blockPos, 0);
+            return true;
         }
     }
 }
