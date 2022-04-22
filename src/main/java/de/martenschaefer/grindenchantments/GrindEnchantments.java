@@ -72,8 +72,6 @@ public class GrindEnchantments {
         if (!config.alternativeCostDisplay())
             return stack;
 
-        GrindEnchantmentsMod.log(Level.INFO, "Adding level cost lore");
-
         NbtCompound display = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
 
         // TODO Add level cost as separate tag instead of adding it as lore, to make removing it more reliable
