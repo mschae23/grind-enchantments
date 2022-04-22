@@ -6,14 +6,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.StringIdentifiable;
-import com.mojang.serialization.Codec;
 
 public enum EnchantmentCountModes implements EnchantmentCountMode, StringIdentifiable {
     COUNT_ENCHANTMENTS("count_enchantments", (acc, enchantment, level) -> acc + 1),
     COUNT_LEVELS("count_levels", (acc, enchantment, level) -> acc + level);
 
-    public static final Codec<EnchantmentCountModes> CODEC =
-        StringIdentifiable.createCodec(EnchantmentCountModes::values, EnchantmentCountModes::byName);
+    public static final com.mojang.serialization.Codec<EnchantmentCountModes> CODEC =
+        StringIdentifiable.createCodec(EnchantmentCountModes::values);
     private static final Map<String, EnchantmentCountModes> BY_NAME = Arrays.stream(values())
         .collect(Collectors.toMap(EnchantmentCountModes::getName, category -> category));
 

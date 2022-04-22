@@ -19,7 +19,6 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.screen.AnvilScreenHandler;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -91,7 +90,7 @@ public class GrindEnchantments {
             return stack;
         }
 
-        MutableText text = new LiteralText("Enchantment cost: " + cost.getAsInt())
+        MutableText text = Text.literal("Enchantment cost: " + cost.getAsInt())
             .formatted(canTakeItem ? Formatting.GREEN : Formatting.RED);
 
         lore.add(NbtString.of(Text.Serializer.toJson(text)));
