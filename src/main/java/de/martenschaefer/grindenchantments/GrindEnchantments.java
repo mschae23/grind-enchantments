@@ -29,6 +29,7 @@ import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
 import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
@@ -189,7 +190,7 @@ public class GrindEnchantments {
                     player.addExperienceLevels(-cost);
             }
             input.setStack(stack1Book ? 1 : 0, config.disenchant().consumeItem() ?
-                ItemStack.EMPTY : grind(enchantedItemStack, config.allowCurses()));
+                ItemStack.EMPTY : grind(enchantedItemStack, config.allowCurses(), 1));
 
             if (bookItemStack.getCount() == 1)
                 input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
@@ -206,10 +207,11 @@ public class GrindEnchantments {
             return true;
         }
 
-        private static ItemStack grind(ItemStack item, boolean allowCurses) {
+        private static ItemStack grind(ItemStack item, boolean allowCurses, int count) {
             ItemStack itemStack = item.copy();
             itemStack.removeSubNbt("Enchantments");
             itemStack.removeSubNbt("StoredEnchantments");
+            itemStack.setCount(count);
 
             Stream<Map.Entry<Enchantment, Integer>> enchantmentStream = EnchantmentHelper.get(item).entrySet().stream();
 
@@ -265,6 +267,7 @@ public class GrindEnchantments {
                     itemStack2.getItem() == Items.BOOK);
         }
 
+        @Nullable
         public static ItemStack doMoveOperation(ItemStack itemStack1, ItemStack itemStack2, PlayerEntity player) {
             boolean allowCurses = GrindEnchantmentsMod.getConfig().allowCurses();
 
@@ -272,7 +275,7 @@ public class GrindEnchantments {
                 .filter(entry -> allowCurses || !entry.getKey().isCursed()).limit(2).toList();
 
             if (firstEnchantments.size() < 2)
-                return ItemStack.EMPTY;
+                return null;
 
             Map.Entry<Enchantment, Integer> entry = firstEnchantments.get(0);
             ItemStack result;
