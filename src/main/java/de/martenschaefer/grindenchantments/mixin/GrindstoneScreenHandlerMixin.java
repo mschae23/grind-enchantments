@@ -51,7 +51,6 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         PlayerEntity player = this.player;
 
         if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-
             this.result.setStack(0, GrindEnchantments.Disenchant.doDisenchantOperation(itemStack1, itemStack2, player));
             this.sendContentUpdates();
             ci.cancel();
