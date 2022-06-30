@@ -23,12 +23,12 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.fabricmc.loader.api.FabricLoader;
-import de.martenschaefer.grindenchantments.config.DedicatedServerConfig;
-import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
-import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
+import de.martenschaefer.grindenchantments.config.DedicatedServerConfig;
+import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
+import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack itemStack1, ItemStack itemStack2) {
@@ -65,18 +65,24 @@ public class GrindEnchantments {
         return enchantments.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    /**
-     * @param stack mutable; same instance will be returned
-     * @return the {@code stack} argument
-     */
-    public static ItemStack addLevelCostLore(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfig config) {
+    public static ItemStack addLevelCostNbt(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfig config) {
         if (!config.alternativeCostDisplay())
             return stack;
 
-        NbtCompound display = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
+        ItemStack changed = stack.copy();
 
-        // TODO Add level cost as separate tag instead of adding it as lore, to make removing it more reliable
-        // (will require mixin to ItemStack#getTooltip, which (optionally) has the player as well)
+        NbtCompound modNbt = changed.getOrCreateSubNbt(GrindEnchantmentsMod.MODID);
+        modNbt.putInt("Cost", cost.getAsInt());
+        modNbt.putBoolean("CanTake", canTakeItem);
+
+        return changed;
+    }
+
+    public static ItemStack addLevelCostLore(ItemStack stack, IntSupplier cost, boolean canTakeItem) {
+        ItemStack changed = stack.copy();
+
+        NbtCompound display = changed.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
+
         NbtList lore;
 
         if (display.getType(ItemStack.LORE_KEY) == NbtElement.LIST_TYPE) {
@@ -93,7 +99,7 @@ public class GrindEnchantments {
             .formatted(canTakeItem ? Formatting.GREEN : Formatting.RED);
 
         lore.add(NbtString.of(Text.Serializer.toJson(text)));
-        return stack;
+        return changed;
     }
 
     /**
@@ -101,38 +107,10 @@ public class GrindEnchantments {
      * @return the {@code stack} argument
      */
     @SuppressWarnings("UnusedReturnValue")
-    public static ItemStack removeLevelCostLore(ItemStack stack) {
+    public static ItemStack removeLevelCostNbt(ItemStack stack) {
         // TODO Relies on ItemStacks being mutable AND the stack not being copied into the player inventory before calling this method
 
-        NbtCompound display = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
-
-        NbtList lore;
-
-        if (display.getType(ItemStack.LORE_KEY) == NbtElement.LIST_TYPE) {
-            lore = display.getList(ItemStack.LORE_KEY, NbtElement.STRING_TYPE);
-        } else {
-            return stack; // The item stack will not have the level cost if Lore is not a list
-        }
-
-        for (int i = lore.size() - 1; i >= 0; i--) {
-            MutableText loreText = Text.Serializer.fromJson(lore.get(i).asString());
-
-            if (loreText != null && loreText.getString().startsWith("Enchantment cost: ")) {
-                lore.remove(i);
-
-                if (lore.size() == 0) { // Remove NBT if there is nothing else in it, so that the item can still stack
-                    // The only items that will have this will be enchanted books anyway, which can't stack, but this is cleaner
-                    display.remove(ItemStack.LORE_KEY);
-
-                    if (display.getSize() == 0) {
-                        stack.removeSubNbt(ItemStack.DISPLAY_KEY);
-                    }
-                }
-
-                return stack;
-            }
-        }
-
+        stack.removeSubNbt(GrindEnchantmentsMod.MODID);
         return stack;
     }
 
@@ -165,7 +143,7 @@ public class GrindEnchantments {
 
             IntSupplier levelCost = () -> getLevelCost(enchantedItemStack, config.disenchant().costConfig(), config.allowCurses());
 
-            return addLevelCostLore( // Adds level cost as lore if it is enabled
+            return addLevelCostNbt( // Adds level cost as lore if it is enabled
                 transferEnchantmentsToBook(enchantedItemStack, config.allowCurses()),
 
                 // Config for level cost lore
@@ -200,7 +178,7 @@ public class GrindEnchantments {
             }
 
             if (config.dedicatedServerConfig().alternativeCostDisplay()) {
-                removeLevelCostLore(resultStack);
+                removeLevelCostNbt(resultStack);
             }
 
             return true;
@@ -301,7 +279,7 @@ public class GrindEnchantments {
             GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
 
             IntSupplier levelCost = () -> getLevelCost(itemStack1, config.move().costConfig(), config.allowCurses());
-            return addLevelCostLore(result, levelCost, canTakeResult(itemStack1, itemStack2, levelCost, player), config.dedicatedServerConfig());
+            return addLevelCostNbt(result, levelCost, canTakeResult(itemStack1, itemStack2, levelCost, player), config.dedicatedServerConfig());
         }
 
         public static boolean takeResult(ItemStack itemStack1, ItemStack itemStack2, ItemStack resultStack, PlayerEntity player, Inventory input) {
@@ -338,7 +316,7 @@ public class GrindEnchantments {
             }
 
             if (GrindEnchantmentsMod.getConfig().dedicatedServerConfig().alternativeCostDisplay()) {
-                removeLevelCostLore(resultStack);
+                removeLevelCostNbt(resultStack);
             }
 
             return true;

@@ -26,6 +26,7 @@
   "mixins": [
     "grindenchantments.mixins.json"
   ],
+  "accessWidener": "grindenchantments.accesswidener",
 
   "depends": {
     "fabricloader": ">=0.13.3",

@@ -36,6 +36,10 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 16 // Java 16 for 1.17 compatibility
 }
 
+loom {
+    accessWidenerPath = file 'src/main/resources/grindenchantments.accesswidener'
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

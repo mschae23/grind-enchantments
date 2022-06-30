@@ -1,0 +1,3 @@
+accessWidener	v1	named
+accessible	field	net/minecraft/screen/GrindstoneScreenHandler input Lnet/minecraft/inventory/Inventory;
+accessible	field	net/minecraft/screen/GrindstoneScreenHandler result Lnet/minecraft/inventory/Inventory;
