@@ -8,8 +8,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.text.Text;
-import de.martenschaefer.grindenchantments.GrindEnchantments;
 import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
+import de.martenschaefer.grindenchantments.event.GrindstoneEvents;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GrindstoneScreen.class)
@@ -25,12 +25,13 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
         if (!GrindEnchantmentsMod.getConfig().showCost())
             return; // Don't show the enchantment cost
 
-        int i = GrindEnchantments.getLevelCost(this.handler.getSlot(0).getStack(), this.handler.getSlot(1).getStack());
+        int cost = GrindstoneEvents.LEVEL_COST.invoker().getLevelCost(this.handler.getSlot(0).getStack(), this.handler.getSlot(1).getStack(),
+            Objects.requireNonNull(this.client).player);
 
-        if (i > 0) {
+        if (cost > 0) {
             int j = 8453920;
             boolean bl = true;
-            String string = I18n.translate("container.repair.cost", i);
+            String string = I18n.translate("container.repair.cost", cost);
             if (!this.handler.getSlot(2).hasStack()) {
                 bl = false;
             } else {

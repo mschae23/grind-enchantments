@@ -16,7 +16,6 @@ import java.util.function.Function;
 import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -24,9 +23,15 @@ import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
+import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
+import de.martenschaefer.grindenchantments.event.ApplyLevelCostEvent;
+import de.martenschaefer.grindenchantments.event.GrindstoneEvents;
+import de.martenschaefer.grindenchantments.impl.DisenchantOperation;
+import de.martenschaefer.grindenchantments.impl.MoveOperation;
 
 public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
@@ -39,6 +44,29 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        initializeConfig();
+
+        DisenchantOperation disenchant = new DisenchantOperation();
+        MoveOperation move = new MoveOperation();
+
+        GrindstoneEvents.registerAll(disenchant);
+        GrindstoneEvents.registerAll(move);
+
+        ApplyLevelCostEvent.EVENT.register(ApplyLevelCostEvent.DEFAULT, (cost, player) -> {
+            player.addExperienceLevels(-cost);
+            return true;
+        });
+
+        // Mod compatibility with Tax Free Levels
+        if (FabricLoader.getInstance().isModLoaded("taxfreelevels")) {
+            ApplyLevelCostEvent.EVENT.register(ApplyLevelCostEvent.MOD_COMPATIBILITY, (cost, player) -> {
+                TaxFreeLevels.applyFlattenedXpCost(player, cost);
+                return true;
+            });
+        }
+    }
+
+    private static void initializeConfig() {
         Path configPath = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_PATH);
 
         if (Files.exists(configPath) && Files.isRegularFile(configPath)) {

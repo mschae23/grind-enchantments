@@ -4,13 +4,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.WorldEvents;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import de.martenschaefer.grindenchantments.GrindEnchantments;
+import de.martenschaefer.grindenchantments.event.GrindstoneEvents;
 
 @Mixin(GrindstoneScreenHandler.class)
 public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
@@ -31,7 +31,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
     public Inventory result;
 
     @Unique
-    private PlayerEntity player;
+    private PlayerEntity grindenchantments_player;
 
     protected GrindstoneScreenHandlerMixin(ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
@@ -39,26 +39,21 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
     @Inject(at = @At("RETURN"), method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V")
     private void onReturnConstructor(int syncId, PlayerInventory playerInventory, final ScreenHandlerContext context, CallbackInfo ci) {
-        this.player = playerInventory.player;
+        this.grindenchantments_player = playerInventory.player;
     }
 
     @Inject(at = @At("RETURN"), method = "updateResult", cancellable = true)
     private void onUpdateResult(CallbackInfo ci) {
-        ItemStack itemStack1 = this.input.getStack(0);
-        ItemStack itemStack2 = this.input.getStack(1);
+        ItemStack input1 = this.input.getStack(0);
+        ItemStack input2 = this.input.getStack(1);
 
         // PlayerEntity player = ((PlayerInventory) this.slots.get(3).inventory).player;
-        PlayerEntity player = this.player;
+        PlayerEntity player = this.grindenchantments_player;
 
-        if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-            this.result.setStack(0, GrindEnchantments.Disenchant.doDisenchantOperation(itemStack1, itemStack2, player));
-            this.sendContentUpdates();
-            ci.cancel();
-        } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-            ItemStack result = GrindEnchantments.Move.doMoveOperation(itemStack1, itemStack2, player);
+        @Nullable
+        ItemStack result = GrindstoneEvents.UPDATE_RESULT.invoker().onUpdateResult(input1, input2, player);
 
-            if (result == null) return;
-
+        if (result != null) {
             this.result.setStack(0, result);
             this.sendContentUpdates();
             ci.cancel();
@@ -81,8 +76,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         private void canInsertBooks(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
             Inventory input = this.field_16777.input;
 
-            cir.setReturnValue(cir.getReturnValueZ() || (stack.getItem() == Items.BOOK
-                && input.getStack(1).getItem() != Items.BOOK));
+            cir.setReturnValue(cir.getReturnValueZ() || GrindstoneEvents.CAN_INSERT.invoker().canInsert(stack, input.getStack(1), 0));
         }
     }
 
@@ -100,8 +94,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         private void canInsertBooks(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
             Inventory input = this.field_16778.input;
 
-            cir.setReturnValue(cir.getReturnValueZ() || (stack.getItem() == Items.BOOK
-                && input.getStack(0).getItem() != Items.BOOK));
+            cir.setReturnValue(cir.getReturnValueZ() || GrindstoneEvents.CAN_INSERT.invoker().canInsert(stack, input.getStack(0), 1));
         }
     }
 
@@ -122,16 +115,10 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         private void onTakeResult(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
             Inventory input = this.field_16780.input;
 
-            ItemStack itemStack1 = input.getStack(0);
-            ItemStack itemStack2 = input.getStack(1);
+            ItemStack input1 = input.getStack(0);
+            ItemStack input2 = input.getStack(1);
 
-            boolean success = false;
-
-            if (GrindEnchantments.Disenchant.isDisenchantOperation(itemStack1, itemStack2)) {
-                success = GrindEnchantments.Disenchant.takeResult(itemStack1, itemStack2, stack, player, input);
-            } else if (GrindEnchantments.Move.isMoveOperation(itemStack1, itemStack2)) {
-                success = GrindEnchantments.Move.takeResult(itemStack1, itemStack2, stack, player, input);
-            }
+            boolean success = GrindstoneEvents.TAKE_RESULT.invoker().onTakeResult(input1, input2, stack, player, input);
 
             if (success) {
                 this.field_16779.run((world, pos) -> world.syncWorldEvent(WorldEvents.GRINDSTONE_USED, pos, 0)); // Plays grindstone sound
@@ -143,13 +130,13 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
          * @author mschae23
          */
         @Override
-        public boolean canTakeItems(PlayerEntity playerEntity) {
+        public boolean canTakeItems(PlayerEntity player) {
             Inventory input = this.field_16780.input;
 
-            ItemStack itemStack1 = input.getStack(0);
-            ItemStack itemStack2 = input.getStack(1);
+            ItemStack input1 = input.getStack(0);
+            ItemStack input2 = input.getStack(1);
 
-            return GrindEnchantments.canTakeResult(itemStack1, itemStack2, () -> GrindEnchantments.getLevelCost(itemStack1, itemStack2), playerEntity);
+            return GrindstoneEvents.CAN_TAKE_RESULT.invoker().canTakeResult(input1, input2, player);
         }
     }
 }
