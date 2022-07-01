@@ -22,7 +22,7 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
     protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
         super.drawForeground(matrices, mouseX, mouseY);
 
-        if (!GrindEnchantmentsMod.getConfig().showCost())
+        if (!GrindEnchantmentsMod.getConfig().clientConfig().showLevelCost())
             return; // Don't show the enchantment cost
 
         int cost = GrindstoneEvents.LEVEL_COST.invoker().getLevelCost(this.handler.getSlot(0).getStack(), this.handler.getSlot(1).getStack(),

@@ -21,9 +21,9 @@ import org.apache.logging.log4j.Level;
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack stack, EnchantmentCostConfig config, boolean allowCurses) {
         Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(stack);
-        double cost = config.countMode().getCost(enchantments.entrySet(), allowCurses);
+        double cost = config.getCost(enchantments.entrySet(), allowCurses);
 
-        return (int) (cost * config.costFactor() + config.costOffset());
+        return (int) Math.ceil(cost);
     }
 
     public static Map<Enchantment, Integer> getEnchantments(ItemStack stack, boolean allowCurses) {

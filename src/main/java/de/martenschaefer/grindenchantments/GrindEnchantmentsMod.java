@@ -28,10 +28,12 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
+import de.martenschaefer.grindenchantments.cost.CostCountModeType;
 import de.martenschaefer.grindenchantments.event.ApplyLevelCostEvent;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents;
 import de.martenschaefer.grindenchantments.impl.DisenchantOperation;
 import de.martenschaefer.grindenchantments.impl.MoveOperation;
+import de.martenschaefer.grindenchantments.registry.GrindEnchantmentsRegistries;
 
 public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
@@ -44,6 +46,9 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        GrindEnchantmentsRegistries.init();
+        CostCountModeType.init();
+
         initializeConfig();
 
         DisenchantOperation disenchant = new DisenchantOperation();

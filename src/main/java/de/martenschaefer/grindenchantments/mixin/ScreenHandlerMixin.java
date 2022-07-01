@@ -3,6 +3,7 @@ package de.martenschaefer.grindenchantments.mixin;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -20,7 +21,8 @@ public class ScreenHandlerMixin {
     private Supplier<ItemStack> onGetCopySupplier(Supplier<ItemStack> supplier) {
         GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
 
-        if (!config.dedicatedServerConfig().alternativeCostDisplay()) {
+        //noinspection ConstantConditions
+        if (!((Object) this instanceof GrindstoneScreenHandler) || !config.dedicatedServerConfig().alternativeCostDisplay()) {
             return Suppliers.memoize(supplier);
         }
 

@@ -21,7 +21,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:$project.loader_version"
 
     [
-        "fabric-api-base"
+        "fabric-api-base",
+        "fabric-registry-sync-v0"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
     modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"

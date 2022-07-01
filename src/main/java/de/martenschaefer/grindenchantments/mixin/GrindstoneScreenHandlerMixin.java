@@ -10,6 +10,7 @@ import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.WorldEvents;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,8 +18,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents;
 
 @Mixin(GrindstoneScreenHandler.class)
@@ -60,7 +65,15 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         }
     }
 
+    @Inject(method = "transferSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/Slot;onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void changeStackForOnTakeItem(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack, Slot slot) {
+        slot.onTakeItem(player, itemStack);
+    }
 
+    @Redirect(method = "transferSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/Slot;onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V", ordinal = 0))
+    private void removeVanillaOnTakeItemCall(Slot slot, PlayerEntity player, ItemStack stack) {
+        // Remove call
+    }
 
     @Mixin(targets = "net/minecraft/screen/GrindstoneScreenHandler$2")
     public static class Anonymous2Mixin extends Slot {
