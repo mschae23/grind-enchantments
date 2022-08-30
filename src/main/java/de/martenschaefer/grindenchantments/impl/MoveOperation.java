@@ -85,6 +85,10 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
 
     @Override
     public boolean onTakeResult(ItemStack input1, ItemStack input2, ItemStack resultStack, PlayerEntity player, Inventory input) {
+        if (!isMoveOperation(input1, input2)) {
+            return false;
+        }
+
         GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
         boolean allowCurses = config.allowCurses();
 

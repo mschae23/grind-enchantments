@@ -61,7 +61,6 @@ public final class GrindstoneEvents {
             }
         }
 
-        GrindEnchantmentsMod.log(Level.WARN, "Could not get level cost");
         return -1;
     });
 
