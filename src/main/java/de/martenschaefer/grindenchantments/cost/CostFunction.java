@@ -6,10 +6,10 @@ import net.minecraft.enchantment.Enchantment;
 import de.martenschaefer.grindenchantments.registry.GrindEnchantmentsRegistries;
 import com.mojang.serialization.Codec;
 
-public interface CostCountMode {
-    Codec<CostCountMode> TYPE_CODEC = GrindEnchantmentsRegistries.COST_COUNT_MODE.getCodec().dispatch(CostCountMode::getType, CostCountModeType::codec);
+public interface CostFunction {
+    Codec<CostFunction> TYPE_CODEC = GrindEnchantmentsRegistries.COST_FUNCTION.getCodec().dispatch(CostFunction::getType, CostFunctionType::codec);
 
     double getCost(Set<Map.Entry<Enchantment, Integer>> enchantments, boolean allowCurses);
 
-    CostCountModeType<?> getType();
+    CostFunctionType<?> getType();
 }

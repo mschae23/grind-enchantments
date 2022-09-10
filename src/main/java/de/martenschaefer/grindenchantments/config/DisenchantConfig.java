@@ -1,6 +1,6 @@
 package de.martenschaefer.grindenchantments.config;
 
-import de.martenschaefer.grindenchantments.cost.CountMinPowerCostCountMode;
+import de.martenschaefer.grindenchantments.cost.CountMinPowerCostFunction;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -12,5 +12,5 @@ public record DisenchantConfig(boolean enabled, boolean consumeItem, Enchantment
     ).apply(instance, instance.stable(DisenchantConfig::new)));
 
     public static final DisenchantConfig DEFAULT = new DisenchantConfig(true, false,
-        new EnchantmentCostConfig(new CountMinPowerCostCountMode(), 0.3, 8.0));
+        new EnchantmentCostConfig(new CountMinPowerCostFunction(), 0.3, 8.0));
 }

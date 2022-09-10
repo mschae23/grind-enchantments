@@ -7,10 +7,10 @@ import net.minecraft.enchantment.Enchantment;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-public record FirstEnchantmentCostCountMode(CostCountMode delegate) implements CostCountMode {
-    public static final Codec<FirstEnchantmentCostCountMode> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        CostCountMode.TYPE_CODEC.fieldOf("delegate").forGetter(FirstEnchantmentCostCountMode::delegate)
-    ).apply(instance, instance.stable(FirstEnchantmentCostCountMode::new)));
+public record FirstEnchantmentCostFunction(CostFunction delegate) implements CostFunction {
+    public static final Codec<FirstEnchantmentCostFunction> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+        CostFunction.TYPE_CODEC.fieldOf("delegate").forGetter(FirstEnchantmentCostFunction::delegate)
+    ).apply(instance, instance.stable(FirstEnchantmentCostFunction::new)));
 
     @Override
     public double getCost(Set<Map.Entry<Enchantment, Integer>> enchantments, boolean allowCurses) {
@@ -21,7 +21,7 @@ public record FirstEnchantmentCostCountMode(CostCountMode delegate) implements C
     }
 
     @Override
-    public CostCountModeType<?> getType() {
-        return CostCountModeType.FIRST_ENCHANTMENT;
+    public CostFunctionType<?> getType() {
+        return CostFunctionType.FIRST_ENCHANTMENT;
     }
 }

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.enchantment.Enchantment;
 
-public interface AbstractCostCountMode extends CostCountMode {
+public interface AbstractCostFunction extends CostFunction {
     double apply(double accumulator, Enchantment enchantment, int level);
 
     @Override
