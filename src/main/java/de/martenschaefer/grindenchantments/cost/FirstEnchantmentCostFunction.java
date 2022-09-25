@@ -9,7 +9,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public record FirstEnchantmentCostFunction(CostFunction delegate) implements CostFunction {
     public static final Codec<FirstEnchantmentCostFunction> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        CostFunction.TYPE_CODEC.fieldOf("delegate").forGetter(FirstEnchantmentCostFunction::delegate)
+        CostFunction.TYPE_CODEC.fieldOf("function").forGetter(FirstEnchantmentCostFunction::delegate)
     ).apply(instance, instance.stable(FirstEnchantmentCostFunction::new)));
 
     @Override

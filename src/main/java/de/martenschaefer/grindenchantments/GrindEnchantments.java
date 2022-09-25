@@ -15,13 +15,13 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import de.martenschaefer.grindenchantments.config.DedicatedServerConfig;
-import de.martenschaefer.grindenchantments.config.EnchantmentCostConfig;
+import de.martenschaefer.grindenchantments.cost.CostFunction;
 import org.apache.logging.log4j.Level;
 
 public class GrindEnchantments {
-    public static int getLevelCost(ItemStack stack, EnchantmentCostConfig config, boolean allowCurses) {
+    public static int getLevelCost(ItemStack stack, CostFunction costFunction, boolean allowCurses) {
         Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(stack);
-        double cost = config.getCost(enchantments.entrySet(), allowCurses);
+        double cost = costFunction.getCost(enchantments.entrySet(), allowCurses);
 
         return (int) Math.ceil(cost);
     }

@@ -10,6 +10,8 @@ public interface CostFunctionType<M extends CostFunction> {
     CostFunctionType<CountLevelsCostFunction> COUNT_LEVELS = register("count_levels", CountLevelsCostFunction.CODEC);
     CostFunctionType<CountMinPowerCostFunction> COUNT_MIN_POWER = register("count_min_power", CountMinPowerCostFunction.CODEC);
     CostFunctionType<FirstEnchantmentCostFunction> FIRST_ENCHANTMENT = register("first_enchantment", FirstEnchantmentCostFunction.CODEC);
+    CostFunctionType<TransformCostFunction> TRANSFORM = register("transform", TransformCostFunction.CODEC);
+    CostFunctionType<AverageCountCostFunction> AVERAGE_COUNT = register("average_count", AverageCountCostFunction.CODEC);
 
     Codec<M> codec();
 

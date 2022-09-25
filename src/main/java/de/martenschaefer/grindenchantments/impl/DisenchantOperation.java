@@ -51,7 +51,7 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
             return canTakeResult(input1, input2, () ->
-                GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costConfig(), config.allowCurses()), player);
+                GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses()), player);
         }
 
         return true;
@@ -70,7 +70,7 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
         ItemStack bookItemStack = stack1Book ? input1 : input2;
 
         if (!player.getAbilities().creativeMode) {
-            int cost = GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costConfig(), config.allowCurses());
+            int cost = GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses());
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
         }
 
@@ -95,7 +95,7 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
-            return GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costConfig(), config.allowCurses());
+            return GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses());
         }
 
         return -1;

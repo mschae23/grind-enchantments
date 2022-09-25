@@ -74,7 +74,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
             GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
 
             return canTakeResult(input1, input2, () ->
-                GrindEnchantments.getLevelCost(input1, config.move().costConfig(), config.allowCurses()), player);
+                GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses()), player);
         }
 
         return true;
@@ -113,7 +113,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
         }
 
         if (!player.getAbilities().creativeMode) {
-            int cost = GrindEnchantments.getLevelCost(input1, config.move().costConfig(), allowCurses);
+            int cost = GrindEnchantments.getLevelCost(input1, config.move().costFunction(), allowCurses);
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
         }
 
@@ -125,7 +125,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
         if (isMoveOperation(input1, input2)) {
             GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
 
-            return GrindEnchantments.getLevelCost(input1, config.move().costConfig(), config.allowCurses());
+            return GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses());
         }
 
         return -1;
