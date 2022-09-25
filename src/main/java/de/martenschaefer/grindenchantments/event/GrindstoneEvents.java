@@ -5,8 +5,6 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 public final class GrindstoneEvents {

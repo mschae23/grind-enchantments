@@ -78,7 +78,7 @@ public class GrindEnchantments {
      */
     @SuppressWarnings("UnusedReturnValue")
     public static ItemStack removeLevelCostNbt(ItemStack stack) {
-        // TODO Relies on ItemStacks being mutable AND the stack not being copied into the player inventory before calling this method
+        // Relies on ItemStacks being mutable AND the stack not being copied into the player inventory before calling this method
 
         stack.removeSubNbt(GrindEnchantmentsMod.MODID);
         return stack;

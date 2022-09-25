@@ -39,15 +39,7 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
         ItemStack enchantedItemStack = input1.hasEnchantments() ? input1 : input2;
 
         GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
-
-        IntSupplier levelCost = () -> GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costConfig(), config.allowCurses());
-
-        return GrindEnchantments.addLevelCostNbt( // Adds level cost as lore if it is enabled
-            transferEnchantmentsToBook(enchantedItemStack, config.allowCurses()),
-
-            // Config for level cost lore
-            levelCost, canTakeResult(input1, input2, levelCost, player), config.dedicatedServerConfig()
-        );
+        return transferEnchantmentsToBook(enchantedItemStack, config.allowCurses());
     }
 
     @Override
@@ -91,10 +83,6 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
             ItemStack bookNew = bookItemStack.copy();
             bookNew.setCount(bookItemStack.getCount() - 1);
             input.setStack(stack1Book ? 0 : 1, bookNew);
-        }
-
-        if (config.dedicatedServerConfig().alternativeCostDisplay()) {
-            GrindEnchantments.removeLevelCostNbt(resultStack);
         }
 
         return true;

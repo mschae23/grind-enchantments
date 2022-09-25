@@ -65,10 +65,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
             result = EnchantedBookItem.forEnchantment(new EnchantmentLevelEntry(entry.getKey(), entry.getValue()));
         }
 
-        GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
-
-        IntSupplier levelCost = () -> GrindEnchantments.getLevelCost(input1, config.move().costConfig(), config.allowCurses());
-        return GrindEnchantments.addLevelCostNbt(result, levelCost, canTakeResult(input1, input2, levelCost, player), config.dedicatedServerConfig());
+        return result;
     }
 
     @Override
@@ -118,10 +115,6 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
         if (!player.getAbilities().creativeMode) {
             int cost = GrindEnchantments.getLevelCost(input1, config.move().costConfig(), allowCurses);
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
-        }
-
-        if (GrindEnchantmentsMod.getConfig().dedicatedServerConfig().alternativeCostDisplay()) {
-            GrindEnchantments.removeLevelCostNbt(resultStack);
         }
 
         return true;
