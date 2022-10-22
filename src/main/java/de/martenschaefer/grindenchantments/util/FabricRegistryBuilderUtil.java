@@ -21,6 +21,6 @@ public final class FabricRegistryBuilderUtil {
      * @return An instance of FabricRegistryBuilder
      */
     public static <T> FabricRegistryBuilder<T, SimpleRegistry<T>> createSimple(Identifier registryId) {
-        return FabricRegistryBuilder.from(new SimpleRegistry<>(RegistryKey.ofRegistry(registryId), Lifecycle.stable(), null));
+        return FabricRegistryBuilder.from(new SimpleRegistry<T>(RegistryKey.ofRegistry(registryId), Lifecycle.stable(), false));
     }
 }

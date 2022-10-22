@@ -33,8 +33,8 @@
     "minecraft": ">=1.19",
     "java": ">=16",
 
-    "fabric-api-base": "^0.4.9",
-    "fabric-registry-sync-v0": "^0.9.17"
+    "fabric-api-base": "*",
+    "fabric-registry-sync-v0": "*"
   },
   "suggests": {
   },
