@@ -1,8 +1,8 @@
 package de.martenschaefer.grindenchantments.util;
 
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.SimpleRegistry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.registry.SimpleRegistry;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.fabricmc.fabric.api.event.registry.RegistryAttribute;
 import com.mojang.serialization.Lifecycle;
@@ -21,6 +21,6 @@ public final class FabricRegistryBuilderUtil {
      * @return An instance of FabricRegistryBuilder
      */
     public static <T> FabricRegistryBuilder<T, SimpleRegistry<T>> createSimple(Identifier registryId) {
-        return FabricRegistryBuilder.from(new SimpleRegistry<T>(RegistryKey.ofRegistry(registryId), Lifecycle.stable(), null));
+        return FabricRegistryBuilder.from(new SimpleRegistry<T>(RegistryKey.ofRegistry(registryId), Lifecycle.stable(), false));
     }
 }

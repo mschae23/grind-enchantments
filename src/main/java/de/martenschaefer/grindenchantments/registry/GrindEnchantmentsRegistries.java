@@ -1,6 +1,6 @@
 package de.martenschaefer.grindenchantments.registry;
 
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
 import de.martenschaefer.grindenchantments.cost.CostFunctionType;
 import de.martenschaefer.grindenchantments.util.FabricRegistryBuilderUtil;

@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower' version '1.7.4'
+    id 'fabric-loom' version '1.0-SNAPSHOT'
+    id 'io.github.juuxel.loom-quiltflower' version '1.8.0'
     id 'maven-publish'
 }
 
@@ -29,6 +29,10 @@ dependencies {
     modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
 }
 
+loom {
+    accessWidenerPath = file 'src/main/resources/grindenchantments.accesswidener'
+}
+
 processResources {
     inputs.property "version", project.version
 
@@ -40,10 +44,6 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
     it.options.release = 16 // Java 16 for 1.17 compatibility
-}
-
-loom {
-    accessWidenerPath = file 'src/main/resources/grindenchantments.accesswidener'
 }
 
 java {
