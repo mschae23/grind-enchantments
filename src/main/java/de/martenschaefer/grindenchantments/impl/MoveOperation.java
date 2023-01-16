@@ -14,7 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import de.martenschaefer.grindenchantments.GrindEnchantments;
 import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
-import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
+import de.martenschaefer.grindenchantments.config.GrindEnchantmentsV2Config;
 import de.martenschaefer.grindenchantments.event.ApplyLevelCostEvent;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents.CanInsert;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents.CanTakeResult;
@@ -71,7 +71,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
 
             return canTakeResult(input1, input2, () ->
                 GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses()), player);
@@ -86,7 +86,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
             return false;
         }
 
-        GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
         boolean allowCurses = config.allowCurses();
 
         Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(input1);
@@ -123,7 +123,7 @@ public class MoveOperation implements CanInsert, UpdateResult, CanTakeResult, Ta
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
 
             return GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses());
         }

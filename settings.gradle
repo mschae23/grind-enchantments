@@ -8,3 +8,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = 'Grind-Enchantments'
+include 'codec-config-api'

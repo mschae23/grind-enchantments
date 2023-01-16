@@ -12,6 +12,15 @@ version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 repositories {
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/mschae23/codec-config-api")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+
     maven { url 'https://jitpack.io' }
 }
 
@@ -23,10 +32,14 @@ dependencies {
 
     [
         "fabric-api-base",
-        "fabric-registry-sync-v0"
+        "fabric-registry-sync-v0",
+        "fabric-lifecycle-events-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
+    // modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version" // TODO depend on an Architectury mod?
+
+    modImplementation "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
+    include "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
 }
 
 loom {
@@ -43,7 +56,7 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
-    it.options.release = 16 // Java 16 for 1.17 compatibility
+    it.options.release = 17
 }
 
 java {

@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import de.martenschaefer.grindenchantments.GrindEnchantments;
 import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
-import de.martenschaefer.grindenchantments.config.GrindEnchantmentsConfig;
+import de.martenschaefer.grindenchantments.config.GrindEnchantmentsV2Config;
 
 @Mixin(ScreenHandler.class)
 public class ScreenHandlerMixin {
     @SuppressWarnings("Guava")
     @Redirect(method = "sendContentUpdates", at = @At(value = "INVOKE", target = "Lcom/google/common/base/Suppliers;memoize(Lcom/google/common/base/Supplier;)Lcom/google/common/base/Supplier;"))
     private Supplier<ItemStack> onGetCopySupplier(Supplier<ItemStack> supplier) {
-        GrindEnchantmentsConfig config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
 
         //noinspection ConstantConditions
         if (!((Object) this instanceof GrindstoneScreenHandler) || !config.dedicatedServerConfig().alternativeCostDisplay()) {
