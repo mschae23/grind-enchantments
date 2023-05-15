@@ -22,6 +22,7 @@ import de.martenschaefer.grindenchantments.event.GrindstoneEvents.CanTakeResult;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents.LevelCost;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents.TakeResult;
 import de.martenschaefer.grindenchantments.event.GrindstoneEvents.UpdateResult;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResult, TakeResult, LevelCost {
@@ -70,7 +71,7 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
         ItemStack bookItemStack = stack1Book ? input1 : input2;
 
         if (!player.getAbilities().creativeMode) {
-            int cost = GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses());
+            int cost = debugLevelCost("onTakeResult", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses()));
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
         }
 
@@ -95,10 +96,15 @@ public class DisenchantOperation implements CanInsert, UpdateResult, CanTakeResu
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
-            return GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses());
+            return debugLevelCost("getLevelCost", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses()));
         }
 
         return -1;
+    }
+
+    private static int debugLevelCost(String location, int cost) {
+        GrindEnchantmentsMod.log(Level.INFO, "Level cost (" + location + "): " + cost);
+        return cost;
     }
 
     public static boolean isDisenchantOperation(ItemStack input1, ItemStack input2) {
