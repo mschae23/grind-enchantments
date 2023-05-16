@@ -72,7 +72,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
         }
     }
 
-    @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;insertItem(Lnet/minecraft/item/ItemStack;IIZ)Z", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "transferSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;insertItem(Lnet/minecraft/item/ItemStack;IIZ)Z", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onInsertResultItem(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack1, Slot slot, ItemStack itemStack2) {
         GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
 

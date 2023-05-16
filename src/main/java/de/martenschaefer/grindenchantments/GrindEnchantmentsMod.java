@@ -2,8 +2,8 @@ package de.martenschaefer.grindenchantments;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import net.minecraft.registry.RegistryOps;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.dynamic.RegistryOps;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import de.martenschaefer.config.api.ConfigIo;

@@ -1,6 +1,6 @@
 package de.martenschaefer.grindenchantments.cost;
 
-import net.minecraft.registry.Registry;
+import net.minecraft.util.registry.Registry;
 import de.martenschaefer.grindenchantments.GrindEnchantmentsMod;
 import de.martenschaefer.grindenchantments.registry.GrindEnchantmentsRegistries;
 import com.mojang.serialization.Codec;
