@@ -36,7 +36,7 @@ dependencies {
         "fabric-lifecycle-events-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    // modImplementation "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version" // TODO depend on an Architectury mod?
+    modCompileOnly "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
 
     modImplementation "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
     include "de.martenschaefer:codec-config-api:$project.codec_config_api_version"

@@ -6,6 +6,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.RegistryOps;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import de.martenschaefer.config.api.ConfigIo;
 import de.martenschaefer.config.api.ModConfig;
 import de.martenschaefer.grindenchantments.config.GrindEnchantmentsV2Config;
@@ -18,6 +19,7 @@ import de.martenschaefer.grindenchantments.impl.MoveOperation;
 import de.martenschaefer.grindenchantments.registry.GrindEnchantmentsRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
+import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,12 +58,12 @@ public class GrindEnchantmentsMod implements ModInitializer {
         });
 
         // Mod compatibility with Tax Free Levels
-        /* if (FabricLoader.getInstance().isModLoaded("taxfreelevels")) {
+        if (FabricLoader.getInstance().isModLoaded("taxfreelevels")) {
             ApplyLevelCostEvent.EVENT.register(ApplyLevelCostEvent.MOD_COMPATIBILITY, (cost, player) -> {
                 TaxFreeLevels.applyFlattenedXpCost(player, cost);
                 return true;
             });
-        } */
+        }
     }
 
     @SuppressWarnings("deprecation")
