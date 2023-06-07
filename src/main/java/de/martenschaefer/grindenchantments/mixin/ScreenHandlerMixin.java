@@ -17,7 +17,7 @@ import de.martenschaefer.grindenchantments.config.GrindEnchantmentsV2Config;
 @Mixin(ScreenHandler.class)
 public class ScreenHandlerMixin {
     @SuppressWarnings("Guava")
-    @Redirect(method = "sendContentUpdates", at = @At(value = "INVOKE", target = "Lcom/google/common/base/Suppliers;memoize(Lcom/google/common/base/Supplier;)Lcom/google/common/base/Supplier;"))
+    @Redirect(method = "sendContentUpdates", at = @At(value = "INVOKE", target = "Lcom/google/common/base/Suppliers;memoize(Lcom/google/common/base/Supplier;)Lcom/google/common/base/Supplier;", remap = false))
     private Supplier<ItemStack> onGetCopySupplier(Supplier<ItemStack> supplier) {
         GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
 
