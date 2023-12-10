@@ -68,7 +68,7 @@ public class GrindEnchantments {
         MutableText text = Text.literal("Enchantment cost: " + cost.getAsInt())
             .formatted(canTakeItem ? Formatting.GREEN : Formatting.RED);
 
-        lore.add(NbtString.of(Text.Serializer.toJson(text)));
+        lore.add(NbtString.of(Text.Serialization.toJsonString(text)));
         return changed;
     }
 
