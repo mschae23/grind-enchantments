@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.4-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -37,12 +37,19 @@ dependencies {
 
     modCompileOnly "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
 
-    modImplementation "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
-    include "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
+    modImplementation "de.mschae23:codec-config-api:$project.codec_config_api_version"
+    include "de.mschae23:codec-config-api:$project.codec_config_api_version"
 }
 
 loom {
     accessWidenerPath = file 'src/main/resources/grindenchantments.accesswidener'
+    
+    decompilers {
+        vineflower {
+            options.put("ind", "    ")
+            options.put("nls", "1")
+        }
+    }
 }
 
 processResources {
