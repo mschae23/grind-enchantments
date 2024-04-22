@@ -73,9 +73,8 @@ java {
 }
 
 jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
-    }
+    from("COPYING")
+    from("COPYING.LESSER")
 }
 
 // configure the maven publication
