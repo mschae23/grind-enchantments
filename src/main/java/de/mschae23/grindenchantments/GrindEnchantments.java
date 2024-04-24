@@ -23,41 +23,27 @@ import java.util.function.IntSupplier;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.component.type.LoreComponent;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import de.mschae23.grindenchantments.config.DedicatedServerConfig;
+import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.cost.CostFunction;
 import de.mschae23.grindenchantments.item.GrindEnchantmentsDataComponent;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class GrindEnchantments {
-    public static int getLevelCost(ItemStack stack, CostFunction costFunction, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
+    public static int getLevelCost(ItemStack stack, CostFunction costFunction, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
         ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(stack);
-        double cost = costFunction.getCost(enchantments, allowCurses, wrapperLookup);
+        double cost = costFunction.getCost(enchantments, filter, wrapperLookup);
 
         return (int) Math.ceil(cost);
     }
 
-    public static Object2IntMap<RegistryEntry<Enchantment>> getEnchantments(ItemStack stack, boolean allowCurses) {
-        Object2IntMap<RegistryEntry<Enchantment>> enchantments = new Object2IntOpenHashMap<>(EnchantmentHelper.getEnchantments(stack).enchantments);
-
-        if (!allowCurses) {
-            // Don't transfer curses if it isn't enabled in the config
-            for (RegistryEntry<Enchantment> entry : enchantments.keySet()) {
-                if (entry.value().isCursed()) {
-                    enchantments.removeInt(entry);
-                }
-            }
-        }
-
-        return enchantments;
+    public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, FilterConfig filter) {
+        return filter.filter(EnchantmentHelper.getEnchantments(stack));
     }
 
     public static ItemStack addLevelCostComponent(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfig config) {

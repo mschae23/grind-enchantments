@@ -17,18 +17,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.mschae23.grindenchantments.cost;
+package de.mschae23.grindenchantments.config;
 
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.util.StringIdentifiable;
 import com.mojang.serialization.Codec;
-import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 
-public interface CostFunction {
-    Codec<CostFunction> TYPE_CODEC = GrindEnchantmentsRegistries.COST_FUNCTION.getCodec().dispatch(CostFunction::getType, CostFunctionType::codec);
+public enum FilterAction implements StringIdentifiable {
+    ALLOW("allow"),
+    IGNORE("ignore"),
+    DENY("deny");
 
-    double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup);
+    public static final Codec<FilterAction> CODEC = StringIdentifiable.createCodec(FilterAction::values);
+    public static final Codec<FilterAction> NON_IGNORE_CODEC = StringIdentifiable.createCodec(() -> new FilterAction[] { ALLOW, DENY, });
 
-    CostFunctionType<?> getType();
+    private final String name;
+
+    FilterAction(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String asString() {
+        return this.name;
+    }
 }

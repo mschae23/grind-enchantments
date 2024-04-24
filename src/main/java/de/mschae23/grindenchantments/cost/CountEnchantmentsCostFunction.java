@@ -22,14 +22,15 @@ package de.mschae23.grindenchantments.cost;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
+import de.mschae23.grindenchantments.config.FilterConfig;
 
 public class CountEnchantmentsCostFunction implements CostFunction {
     public static final CountEnchantmentsCostFunction INSTANCE = new CountEnchantmentsCostFunction();
     public static final MapCodec<CountEnchantmentsCostFunction> CODEC = MapCodec.unit(() -> INSTANCE);
 
     @Override
-    public double getCost(ItemEnchantmentsComponent enchantments, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
-        return (double) enchantments.getEnchantments().stream().filter(entry -> allowCurses || !entry.value().isCursed()).count();
+    public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
+        return enchantments.getEnchantments().size();
     }
 
     @Override

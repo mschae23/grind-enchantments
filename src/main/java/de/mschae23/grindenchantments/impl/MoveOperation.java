@@ -33,9 +33,12 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.EnchantmentTags;
+import net.minecraft.screen.AnvilScreenHandler;
 import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV2Config;
+import de.mschae23.grindenchantments.config.FilterAction;
+import de.mschae23.grindenchantments.config.FilterConfig;
+import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -55,9 +58,15 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             return ItemStack.EMPTY;
         }
 
-        boolean allowCurses = GrindEnchantmentsMod.getConfig().allowCurses();
-        ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(input1);
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(enchantments, allowCurses, wrapperLookup);
+        FilterConfig filter = GrindEnchantmentsMod.getConfig().filter();
+
+        if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
+            && (filter.item().action() == FilterAction.DENY) == filter.item().items().contains(input1.getRegistryEntry())) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(input1, filter);
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(enchantments, wrapperLookup);
 
         if (firstEnchantment == null) {
             return ItemStack.EMPTY;
@@ -83,17 +92,24 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             result = result.copyComponentsToNewStack(Items.ENCHANTED_BOOK, 1);
         }
 
+        int repairCost = 0;
+
+        for(int i = 0; i < builder.getEnchantments().size(); i++) {
+            repairCost = AnvilScreenHandler.getNextCost(repairCost);
+        }
+
         result.set(DataComponentTypes.STORED_ENCHANTMENTS, builder.build());
+        result.set(DataComponentTypes.REPAIR_COST, repairCost);
         return result;
     }
 
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
 
             return canTakeResult(input1, input2, () ->
-                GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses(), wrapperLookup), player);
+                GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.filter(), wrapperLookup), player);
         }
 
         return true;
@@ -105,11 +121,11 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             return false;
         }
 
-        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
-        boolean allowCurses = config.allowCurses();
+        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        FilterConfig filter = config.filter();
 
         ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(input1);
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(enchantments, allowCurses, wrapperLookup);
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(filter.filter(enchantments), wrapperLookup);
 
         if (firstEnchantment == null) {
             return false;
@@ -120,6 +136,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
 
         ItemStack resultingInput1 = new ItemStack(Items.ENCHANTED_BOOK);
         EnchantmentHelper.set(resultingInput1, builder.build());
+        resultingInput1.set(DataComponentTypes.REPAIR_COST, AnvilScreenHandler.getNextCost(input1.getOrDefault(DataComponentTypes.REPAIR_COST, 0)));
 
         input.setStack(0, resultingInput1);
 
@@ -132,7 +149,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
         }
 
         if (!player.getAbilities().creativeMode) {
-            int cost = GrindEnchantments.getLevelCost(input1, config.move().costFunction(), allowCurses, wrapperLookup);
+            int cost = GrindEnchantments.getLevelCost(input1, config.move().costFunction(), filter, wrapperLookup);
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
         }
 
@@ -142,9 +159,9 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
 
-            return GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.allowCurses(), wrapperLookup);
+            return GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.filter(), wrapperLookup);
         }
 
         return -1;
@@ -165,7 +182,11 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
     }
 
     @Nullable
-    public static ObjectIntPair<RegistryEntry<Enchantment>> getFirstEnchantment(ItemEnchantmentsComponent enchantments, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
+    public static ObjectIntPair<RegistryEntry<Enchantment>> getFirstEnchantment(ItemEnchantmentsComponent enchantments, RegistryWrapper.WrapperLookup wrapperLookup) {
+        if (enchantments.getSize() < 2) {
+            return null;
+        }
+
         RegistryEntryList<Enchantment> tooltipOrder = ItemEnchantmentsComponent.getTooltipOrderList(wrapperLookup, RegistryKeys.ENCHANTMENT, EnchantmentTags.TOOLTIP_ORDER);
 
         @Nullable
@@ -174,30 +195,17 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
         for (RegistryEntry<Enchantment> entry : tooltipOrder) {
             int level = enchantments.enchantments.getInt(entry);
 
-            if (level > 0 && (allowCurses || !entry.value().isCursed())) {
+            if (level > 0) {
                 firstEnchantment = ObjectIntPair.of(entry, level);
                 break;
             }
         }
 
-        byte enchantmentCount = 0;
-
         for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchantments.getEnchantmentsMap()) {
-            if (firstEnchantment == null && !tooltipOrder.contains(entry.getKey()) && (allowCurses || !entry.getKey().value().isCursed())) {
+            if (firstEnchantment == null && !tooltipOrder.contains(entry.getKey())) {
                 firstEnchantment = ObjectIntPair.of(entry.getKey(), entry.getIntValue());
-            }
-
-            if (allowCurses || !entry.getKey().value().isCursed()) {
-                enchantmentCount += 1;
-            }
-
-            if (enchantmentCount >= 2) {
                 break;
             }
-        }
-
-        if (enchantmentCount < 2) {
-            return null;
         }
 
         return firstEnchantment;

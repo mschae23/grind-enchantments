@@ -27,7 +27,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV2Config;
+import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
 import de.mschae23.grindenchantments.item.GrindEnchantmentsDataComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class ScreenHandlerMixin {
     @WrapOperation(method = "sendContentUpdates", at = @At(value = "INVOKE", target = "Lcom/google/common/base/Suppliers;memoize(Lcom/google/common/base/Supplier;)Lcom/google/common/base/Supplier;", remap = false))
     private com.google.common.base.Supplier<ItemStack> addLoreOnSendUpdates(com.google.common.base.Supplier<ItemStack> delegate, Operation<com.google.common.base.Supplier<ItemStack>> original) {
-        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
 
         if (!config.dedicatedServerConfig().alternativeCostDisplay()) {
             return original.call(delegate);
@@ -61,7 +61,7 @@ public class ScreenHandlerMixin {
 
     @WrapOperation(method = "updateToClient", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/Slot;getStack()Lnet/minecraft/item/ItemStack;"))
     private ItemStack addLoreOnUpdateToClient(Slot slot, Operation<ItemStack> original) {
-        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
         ItemStack stack = original.call(slot).copy();
 
         if (!config.dedicatedServerConfig().alternativeCostDisplay()) {

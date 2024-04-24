@@ -23,16 +23,17 @@ import de.mschae23.config.api.ModConfig;
 import de.mschae23.grindenchantments.config.ClientConfig;
 import de.mschae23.grindenchantments.config.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.DisenchantConfig;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV2Config;
+import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
 import de.mschae23.grindenchantments.config.MoveConfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.v2.GrindEnchantmentsV2Config;
 
 @Deprecated
 @SuppressWarnings("DeprecatedIsStillUsed")
 public record GrindEnchantmentsV1Config(DisenchantConfig disenchant, MoveConfig move, boolean allowCurses,
-                                        DedicatedServerConfig dedicatedServerConfig, ClientConfig clientConfig) implements ModConfig<GrindEnchantmentsV2Config> {
+                                        DedicatedServerConfig dedicatedServerConfig, ClientConfig clientConfig) implements ModConfig<GrindEnchantmentsV3Config> {
     public static final MapCodec<GrindEnchantmentsV1Config> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         DisenchantConfig.CODEC.fieldOf("disenchant_to_book").forGetter(GrindEnchantmentsV1Config::disenchant),
         MoveConfig.CODEC.fieldOf("move_enchantments").forGetter(GrindEnchantmentsV1Config::move),
@@ -41,19 +42,19 @@ public record GrindEnchantmentsV1Config(DisenchantConfig disenchant, MoveConfig 
         ClientConfig.CODEC.fieldOf("client_options").forGetter(GrindEnchantmentsV1Config::clientConfig)
     ).apply(instance, instance.stable(GrindEnchantmentsV1Config::new)));
 
-    public static final Type<GrindEnchantmentsV2Config, GrindEnchantmentsV1Config> TYPE = new Type<>(1, TYPE_CODEC);
+    public static final Type<GrindEnchantmentsV3Config, GrindEnchantmentsV1Config> TYPE = new Type<>(1, TYPE_CODEC);
 
     public static final GrindEnchantmentsV1Config DEFAULT =
         new GrindEnchantmentsV1Config(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT, false, DedicatedServerConfig.DEFAULT, ClientConfig.DEFAULT);
 
     @Override
-    public Type<GrindEnchantmentsV2Config, ?> type() {
+    public Type<GrindEnchantmentsV3Config, ?> type() {
         return TYPE;
     }
 
     @Override
-    public GrindEnchantmentsV2Config latest() {
-        return new GrindEnchantmentsV2Config(this.disenchant, this.move, this.allowCurses, this.dedicatedServerConfig, this.clientConfig);
+    public GrindEnchantmentsV3Config latest() {
+        return new GrindEnchantmentsV2Config(this.disenchant, this.move, this.allowCurses, this.dedicatedServerConfig, this.clientConfig).latest();
     }
 
     @Override

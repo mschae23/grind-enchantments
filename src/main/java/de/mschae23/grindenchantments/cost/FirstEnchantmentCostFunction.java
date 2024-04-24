@@ -25,6 +25,7 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.impl.MoveOperation;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
@@ -34,8 +35,8 @@ public record FirstEnchantmentCostFunction(CostFunction delegate) implements Cos
     ).apply(instance, instance.stable(FirstEnchantmentCostFunction::new)));
 
     @Override
-    public double getCost(ItemEnchantmentsComponent enchantments, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = MoveOperation.getFirstEnchantment(enchantments, allowCurses, wrapperLookup);
+    public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = MoveOperation.getFirstEnchantment(enchantments, wrapperLookup);
 
         if (firstEnchantment == null) {
             return 1.0;
@@ -43,7 +44,7 @@ public record FirstEnchantmentCostFunction(CostFunction delegate) implements Cos
             ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
             builder.add(firstEnchantment.left().value(), firstEnchantment.rightInt());
 
-            return this.delegate.getCost(builder.build(), allowCurses, wrapperLookup);
+            return this.delegate.getCost(builder.build(), filter, wrapperLookup);
         }
     }
 

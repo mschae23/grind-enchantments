@@ -24,6 +24,7 @@ import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record CountLevelsCostFunction(double normalFactor, double treasureFactor) implements CostFunction {
     public static final MapCodec<CountLevelsCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -32,9 +33,8 @@ public record CountLevelsCostFunction(double normalFactor, double treasureFactor
     ).apply(instance, instance.stable(CountLevelsCostFunction::new)));
 
     @Override
-    public double getCost(ItemEnchantmentsComponent enchantments, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
+    public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
         return enchantments.getEnchantmentsMap().stream()
-            .filter(entry -> allowCurses || !entry.getKey().value().isCursed())
             .mapToDouble(entry -> (double) entry.getIntValue() * (entry.getKey().value().isTreasure() ? this.treasureFactor : this.normalFactor))
             .sum();
     }

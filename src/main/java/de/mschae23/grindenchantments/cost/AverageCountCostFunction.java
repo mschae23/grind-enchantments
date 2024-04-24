@@ -23,6 +23,7 @@ import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record AverageCountCostFunction(CostFunction function) implements CostFunction {
     public static final MapCodec<AverageCountCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -30,9 +31,9 @@ public record AverageCountCostFunction(CostFunction function) implements CostFun
     ).apply(instance, instance.stable(AverageCountCostFunction::new)));
 
     @Override
-    public double getCost(ItemEnchantmentsComponent enchantments, boolean allowCurses, RegistryWrapper.WrapperLookup wrapperLookup) {
-        double cost = this.function.getCost(enchantments, allowCurses, wrapperLookup);
-        long count = enchantments.getEnchantments().stream().filter(entry -> allowCurses || !entry.value().isCursed()).count();
+    public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
+        double cost = this.function.getCost(enchantments, filter, wrapperLookup);
+        long count = enchantments.getEnchantments().size();
 
         if (count == 0) {
             return cost;

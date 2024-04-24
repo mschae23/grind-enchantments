@@ -30,13 +30,15 @@ import de.mschae23.config.api.ConfigIo;
 import de.mschae23.config.api.ModConfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV2Config;
+import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
 import de.mschae23.grindenchantments.config.v1.GrindEnchantmentsV1Config;
+import de.mschae23.grindenchantments.config.v2.GrindEnchantmentsV2Config;
 import de.mschae23.grindenchantments.cost.CostFunctionType;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import de.mschae23.grindenchantments.impl.DisenchantOperation;
 import de.mschae23.grindenchantments.impl.MoveOperation;
+import de.mschae23.grindenchantments.impl.ResetRepairCostOperation;
 import de.mschae23.grindenchantments.item.GrindEnchantmentsDataComponent;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
@@ -50,11 +52,11 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static final Path CONFIG_PATH = Paths.get(MODID + ".json");
 
-    private static final GrindEnchantmentsV2Config LATEST_CONFIG_DEFAULT = GrindEnchantmentsV2Config.DEFAULT;
+    private static final GrindEnchantmentsV3Config LATEST_CONFIG_DEFAULT = GrindEnchantmentsV3Config.DEFAULT;
     private static final int LATEST_CONFIG_VERSION = LATEST_CONFIG_DEFAULT.version();
-    private static final Codec<ModConfig<GrindEnchantmentsV2Config>> CONFIG_CODEC = ModConfig.createCodec(LATEST_CONFIG_VERSION, GrindEnchantmentsMod::getConfigType);
+    private static final Codec<ModConfig<GrindEnchantmentsV3Config>> CONFIG_CODEC = ModConfig.createCodec(LATEST_CONFIG_VERSION, GrindEnchantmentsMod::getConfigType);
 
-    private static GrindEnchantmentsV2Config CONFIG = LATEST_CONFIG_DEFAULT;
+    private static GrindEnchantmentsV3Config CONFIG = LATEST_CONFIG_DEFAULT;
 
     @Override
     public void onInitialize() {
@@ -70,9 +72,11 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
         DisenchantOperation disenchant = new DisenchantOperation();
         MoveOperation move = new MoveOperation();
+        ResetRepairCostOperation resetRepairCost = new ResetRepairCostOperation();
 
         GrindstoneEvents.registerAll(disenchant);
         GrindstoneEvents.registerAll(move);
+        GrindstoneEvents.registerAll(resetRepairCost);
 
         ApplyLevelCostEvent.EVENT.register(ApplyLevelCostEvent.DEFAULT, (cost, player) -> {
             player.addExperienceLevels(-cost);
@@ -89,15 +93,15 @@ public class GrindEnchantmentsMod implements ModInitializer {
     }
 
     @SuppressWarnings("deprecation")
-    private static ModConfig.Type<GrindEnchantmentsV2Config, ?> getConfigType(int version) {
-        //noinspection SwitchStatementWithTooFewBranches
+    private static ModConfig.Type<GrindEnchantmentsV3Config, ?> getConfigType(int version) {
         return new ModConfig.Type<>(version, switch (version) {
             case 1 -> GrindEnchantmentsV1Config.TYPE_CODEC;
-            default -> GrindEnchantmentsV2Config.TYPE_CODEC;
+            case 2 -> GrindEnchantmentsV2Config.TYPE_CODEC;
+            default -> GrindEnchantmentsV3Config.TYPE_CODEC;
         });
     }
 
-    public static GrindEnchantmentsV2Config getConfig() {
+    public static GrindEnchantmentsV3Config getConfig() {
         return CONFIG;
     }
 

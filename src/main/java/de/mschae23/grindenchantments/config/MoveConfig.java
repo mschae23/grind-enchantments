@@ -21,6 +21,7 @@ package de.mschae23.grindenchantments.config;
 
 import de.mschae23.grindenchantments.cost.CostFunction;
 import de.mschae23.grindenchantments.cost.CountLevelsCostFunction;
+import de.mschae23.grindenchantments.cost.FilterCostFunction;
 import de.mschae23.grindenchantments.cost.TransformCostFunction;
 import de.mschae23.grindenchantments.cost.FirstEnchantmentCostFunction;
 import com.mojang.serialization.Codec;
@@ -33,5 +34,6 @@ public record MoveConfig(boolean enabled, CostFunction costFunction) {
     ).apply(instance, instance.stable(MoveConfig::new)));
 
     public static final MoveConfig DEFAULT = new MoveConfig(true,
-        new TransformCostFunction(new FirstEnchantmentCostFunction(new CountLevelsCostFunction(3.0, 8.0)), 0.5, 0.5));
+        new FilterCostFunction(new FirstEnchantmentCostFunction(new TransformCostFunction(
+            new CountLevelsCostFunction(3.0, 8.0), 0.5, 0.5))));
 }

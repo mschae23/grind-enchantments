@@ -22,21 +22,20 @@ package de.mschae23.grindenchantments.impl;
 import java.util.function.IntSupplier;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.AnvilScreenHandler;
 import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV2Config;
+import de.mschae23.grindenchantments.config.FilterAction;
+import de.mschae23.grindenchantments.config.FilterConfig;
+import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import org.jetbrains.annotations.NotNull;
 
 public class DisenchantOperation implements GrindstoneEvents.CanInsert, GrindstoneEvents.UpdateResult, GrindstoneEvents.CanTakeResult, GrindstoneEvents.TakeResult, GrindstoneEvents.LevelCost {
@@ -53,20 +52,20 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
 
         ItemStack enchantedItemStack = input1.hasEnchantments() ? input1 : input2;
 
-        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
-        return transferEnchantmentsToBook(enchantedItemStack, config.allowCurses());
+        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        return transferEnchantmentsToBook(enchantedItemStack, config.filter());
     }
 
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isDisenchantOperation(input1, input2)) {
-            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
 
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
             return canTakeResult(input1, input2, () ->
-                GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses(), wrapperLookup), player);
+                GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.filter(), wrapperLookup), player);
         }
 
         return true;
@@ -78,19 +77,19 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
             return false;
         }
 
-        GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
 
         boolean stack1Book = input1.getItem() == Items.BOOK;
         ItemStack enchantedItemStack = stack1Book ? input2 : input1;
         ItemStack bookItemStack = stack1Book ? input1 : input2;
 
         if (!player.getAbilities().creativeMode) {
-            int cost = debugLevelCost("onTakeResult", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses(), wrapperLookup));
+            int cost = debugLevelCost("onTakeResult", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.filter(), wrapperLookup));
             ApplyLevelCostEvent.EVENT.invoker().applyLevelCost(cost, player);
         }
 
         input.setStack(stack1Book ? 1 : 0, config.disenchant().consumeItem() ?
-            ItemStack.EMPTY : grind(enchantedItemStack, config.allowCurses()));
+            ItemStack.EMPTY : grind(enchantedItemStack, config.filter()));
 
         if (bookItemStack.getCount() == 1)
             input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
@@ -106,11 +105,11 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isDisenchantOperation(input1, input2)) {
-            GrindEnchantmentsV2Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
-            return debugLevelCost("getLevelCost", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.allowCurses(), wrapperLookup));
+            return debugLevelCost("getLevelCost", GrindEnchantments.getLevelCost(enchantedItemStack, config.disenchant().costFunction(), config.filter(), wrapperLookup));
         }
 
         return -1;
@@ -134,30 +133,37 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
         return player.getAbilities().creativeMode || player.experienceLevel >= cost.getAsInt();
     }
 
-    public static ItemStack transferEnchantmentsToBook(ItemStack source, boolean allowCurses) {
-        ItemStack itemStack = new ItemStack(Items.ENCHANTED_BOOK);
-        itemStack.set(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT);
-
-        Object2IntMap<RegistryEntry<Enchantment>> map = GrindEnchantments.getEnchantments(source, allowCurses);
-
-        if (map.isEmpty())
+    public static ItemStack transferEnchantmentsToBook(ItemStack source, FilterConfig filter) {
+        if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
+            && (filter.item().action() == FilterAction.DENY) == filter.item().items().contains(source.getRegistryEntry())) {
             return ItemStack.EMPTY;
-
-        for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : map.object2IntEntrySet()) {
-            EnchantmentHelper.apply(itemStack, builder -> builder.add(entry.getKey().value(), entry.getIntValue()));
         }
 
-        return itemStack;
+        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(source, filter);
+
+        if (enchantments.isEmpty())
+            return ItemStack.EMPTY;
+
+        int repairCost = 0;
+
+        for(int i = 0; i < enchantments.getSize(); i++) {
+            repairCost = AnvilScreenHandler.getNextCost(repairCost);
+        }
+
+        ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+        book.set(DataComponentTypes.STORED_ENCHANTMENTS, enchantments);
+        book.set(DataComponentTypes.REPAIR_COST, repairCost);
+        return book;
     }
 
-    private static ItemStack grind(ItemStack item, boolean allowCurses) {
-        ItemStack item2 = item.copy();
+    private static ItemStack grind(ItemStack stack, FilterConfig filter) {
+        ItemStack stack2 = stack.copy();
+        ItemEnchantmentsComponent enchantments = filter.filterReversed(stack2.getOrDefault(EnchantmentHelper.getEnchantmentsComponentType(stack2),
+            ItemEnchantmentsComponent.DEFAULT));
+        stack2.set(EnchantmentHelper.getEnchantmentsComponentType(stack2), enchantments);
 
-        ItemEnchantmentsComponent enchantments = EnchantmentHelper.apply(item2, components ->
-            components.remove(enchantment -> allowCurses || !enchantment.value().isCursed()));
-
-        if (item2.isOf(Items.ENCHANTED_BOOK) && enchantments.isEmpty()) {
-            item2 = item2.copyComponentsToNewStack(Items.BOOK, item2.getCount());
+        if (stack2.isOf(Items.ENCHANTED_BOOK) && enchantments.isEmpty()) {
+            stack2 = stack2.copyComponentsToNewStack(Items.BOOK, stack2.getCount());
         }
 
         int repairCost = 0;
@@ -166,7 +172,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
             repairCost = AnvilScreenHandler.getNextCost(repairCost);
         }
 
-        item2.set(DataComponentTypes.REPAIR_COST, repairCost);
-        return item2;
+        stack2.set(DataComponentTypes.REPAIR_COST, repairCost);
+        return stack2;
     }
 }
