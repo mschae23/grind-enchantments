@@ -72,13 +72,6 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
             ItemStack result = GrindstoneEvents.UPDATE_RESULT.invoker().onUpdateResult(input1, input2, player, player.getRegistryManager());
 
             if (!result.isEmpty()) {
-                int cost = GrindstoneEvents.LEVEL_COST.invoker().getLevelCost(input1, input2, player, player.getRegistryManager());
-
-                if (cost >= 0) {
-                    boolean canTake = GrindstoneEvents.CAN_TAKE_RESULT.invoker().canTakeResult(input1, input2, player, player.getRegistryManager());
-                    result = GrindEnchantments.addLevelCostComponent(result, () -> cost, canTake, GrindEnchantmentsMod.getConfig().dedicatedServerConfig());
-                }
-
                 cir.setReturnValue(result);
             }
         }

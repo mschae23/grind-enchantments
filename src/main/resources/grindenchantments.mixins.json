@@ -7,8 +7,7 @@
     "GrindstoneScreenHandlerMixin",
     "GrindstoneScreenHandlerMixin$Anonymous2Mixin",
     "GrindstoneScreenHandlerMixin$Anonymous3Mixin",
-    "GrindstoneScreenHandlerMixin$Anonymous4Mixin",
-    "ScreenHandlerMixin"
+    "GrindstoneScreenHandlerMixin$Anonymous4Mixin"
   ],
   "client": [
     "GrindstoneScreenMixin"

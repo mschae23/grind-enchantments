@@ -23,8 +23,10 @@ import java.util.function.IntSupplier;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.component.type.LoreComponent;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -32,7 +34,6 @@ import net.minecraft.util.Formatting;
 import de.mschae23.grindenchantments.config.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.cost.CostFunction;
-import de.mschae23.grindenchantments.item.GrindEnchantmentsDataComponent;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack stack, CostFunction costFunction, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -51,7 +52,13 @@ public class GrindEnchantments {
             return stack;
 
         ItemStack changed = stack.copy();
-        changed.set(GrindEnchantmentsDataComponent.TYPE, new GrindEnchantmentsDataComponent(cost.getAsInt(), canTakeItem));
+        changed.apply(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT, nbt -> nbt.apply(compound -> {
+            NbtCompound tag = new NbtCompound();
+            tag.putInt("Cost", cost.getAsInt());
+            tag.putBoolean("CanTake", canTakeItem);
+
+            compound.put(GrindEnchantmentsMod.MODID, tag);
+        }));
         return changed;
     }
 
@@ -71,7 +78,8 @@ public class GrindEnchantments {
     public static ItemStack removeLevelCostNbt(ItemStack stack) {
         // Relies on ItemStacks being mutable AND the stack not being copied into the player inventory before calling this method
 
-        stack.remove(GrindEnchantmentsDataComponent.TYPE);
+        stack.apply(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT, nbt -> nbt.apply(compound ->
+            compound.remove(GrindEnchantmentsMod.MODID)));
         return stack;
     }
 }

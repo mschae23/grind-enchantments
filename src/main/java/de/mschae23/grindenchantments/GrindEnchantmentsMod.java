@@ -39,7 +39,6 @@ import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import de.mschae23.grindenchantments.impl.DisenchantOperation;
 import de.mschae23.grindenchantments.impl.MoveOperation;
 import de.mschae23.grindenchantments.impl.ResetRepairCostOperation;
-import de.mschae23.grindenchantments.item.GrindEnchantmentsDataComponent;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
@@ -67,8 +66,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
         GrindEnchantmentsRegistries.init();
         CostFunctionType.init();
-
-        GrindEnchantmentsDataComponent.init();
 
         DisenchantOperation disenchant = new DisenchantOperation();
         MoveOperation move = new MoveOperation();
