@@ -42,7 +42,7 @@ public record FirstEnchantmentCostFunction(CostFunction delegate) implements Cos
             return 1.0;
         } else {
             ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
-            builder.add(firstEnchantment.left().value(), firstEnchantment.rightInt());
+            builder.add(firstEnchantment.left(), firstEnchantment.rightInt());
 
             return this.delegate.getCost(builder.build(), filter, wrapperLookup);
         }

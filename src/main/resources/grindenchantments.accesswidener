@@ -4,4 +4,4 @@ accessible	field	net/minecraft/screen/GrindstoneScreenHandler	result	Lnet/minecr
 
 accessible	field	net/minecraft/component/type/ItemEnchantmentsComponent	enchantments	Lit/unimi/dsi/fastutil/objects/Object2IntOpenHashMap;
 accessible	method	net/minecraft/component/type/ItemEnchantmentsComponent	getTooltipOrderList	(Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/tag/TagKey;)Lnet/minecraft/registry/entry/RegistryEntryList;
-accessible	method	net/minecraft/enchantment/EnchantmentHelper	getEnchantmentsComponentType	(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/component/DataComponentType;
+accessible	method	net/minecraft/enchantment/EnchantmentHelper	getEnchantmentsComponentType	(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/component/ComponentType;

@@ -30,7 +30,7 @@ public class CountMinPowerCostFunction implements CostFunction {
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
-        return enchantments.getEnchantmentsMap().stream()
+        return enchantments.getEnchantmentEntries().stream()
             .mapToDouble(entry -> entry.getKey().value().getMinPower(entry.getIntValue()))
             .sum();
     }

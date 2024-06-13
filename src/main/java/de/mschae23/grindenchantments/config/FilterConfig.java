@@ -26,6 +26,7 @@ import net.minecraft.registry.RegistryCodecs;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.registry.tag.EnchantmentTags;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -48,7 +49,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
         if (this.curses == FilterAction.DENY) {
             for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (entry.value().isCursed()) {
+                if (entry.isIn(EnchantmentTags.CURSE)) {
                     return ItemEnchantmentsComponent.DEFAULT;
                 }
             }
@@ -63,7 +64,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         }
 
         builder.remove(enchantment ->
-            ((this.curses == FilterAction.IGNORE) && enchantment.value().isCursed())
+            ((this.curses == FilterAction.IGNORE) && enchantment.isIn(EnchantmentTags.CURSE))
             || ((this.enchantment.action == FilterAction.IGNORE) == this.enchantment.enchantments.contains(enchantment)));
 
         return builder.build();
@@ -78,7 +79,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
         if (this.curses == FilterAction.DENY) {
             for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (entry.value().isCursed()) {
+                if (entry.isIn(EnchantmentTags.CURSE)) {
                     return ItemEnchantmentsComponent.DEFAULT;
                 }
             }
@@ -93,7 +94,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         }
 
         builder.remove(enchantment ->
-            ((this.curses == FilterAction.ALLOW) || !enchantment.value().isCursed())
+            ((this.curses == FilterAction.ALLOW) || !enchantment.isIn(EnchantmentTags.CURSE))
             && ((this.enchantment.action == FilterAction.ALLOW) == this.enchantment.enchantments.contains(enchantment)));
 
         return builder.build();

@@ -74,7 +74,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
 
         ItemStack result = input2.copy();
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(result.getOrDefault(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT));
-        int targetLevel = builder.getLevel(firstEnchantment.left().value());
+        int targetLevel = builder.getLevel(firstEnchantment.left());
 
         if (targetLevel > 0) {
             if (targetLevel != firstEnchantment.rightInt() || firstEnchantment.rightInt() == firstEnchantment.left().value().getMaxLevel()) {
@@ -86,7 +86,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             targetLevel = firstEnchantment.rightInt();
         }
 
-        builder.add(firstEnchantment.left().value(), targetLevel);
+        builder.add(firstEnchantment.left(), targetLevel);
 
         if (result.getItem() == Items.BOOK) {
             result = result.copyComponentsToNewStack(Items.ENCHANTED_BOOK, 1);
@@ -201,7 +201,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             }
         }
 
-        for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchantments.getEnchantmentsMap()) {
+        for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchantments.getEnchantmentEntries()) {
             if (firstEnchantment == null && !tooltipOrder.contains(entry.getKey())) {
                 firstEnchantment = ObjectIntPair.of(entry.getKey(), entry.getIntValue());
                 break;

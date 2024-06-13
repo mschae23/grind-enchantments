@@ -21,6 +21,7 @@ package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.registry.tag.EnchantmentTags;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -34,8 +35,8 @@ public record CountLevelsCostFunction(double normalFactor, double treasureFactor
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
-        return enchantments.getEnchantmentsMap().stream()
-            .mapToDouble(entry -> (double) entry.getIntValue() * (entry.getKey().value().isTreasure() ? this.treasureFactor : this.normalFactor))
+        return enchantments.getEnchantmentEntries().stream()
+            .mapToDouble(entry -> (double) entry.getIntValue() * (entry.getKey().isIn(EnchantmentTags.TREASURE) ? this.treasureFactor : this.normalFactor))
             .sum();
     }
 
