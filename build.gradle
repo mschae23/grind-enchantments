@@ -27,7 +27,18 @@ repositories {
         }
     }
 
-    maven { url 'https://jitpack.io' }
+    // Repositories for the dependencies of Tax Free Levels
+    maven { url "https://maven.shedaniel.me/" }
+    maven { url "https://maven.terraformersmc.com/releases" }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+
+    // maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -42,7 +53,7 @@ dependencies {
         "fabric-lifecycle-events-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    modCompileOnly "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
+    modCompileOnly "io.github.fourmisain:TaxFreeLevels-fabric:$project.tax_free_levels_version"
 
     modImplementation "de.mschae23:codec-config-api:$project.codec_config_api_version"
     include "de.mschae23:codec-config-api:$project.codec_config_api_version"
