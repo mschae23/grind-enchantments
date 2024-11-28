@@ -31,7 +31,7 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import de.mschae23.grindenchantments.config.DedicatedServerConfig;
+import de.mschae23.grindenchantments.config.legacy.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.cost.CostFunction;
 

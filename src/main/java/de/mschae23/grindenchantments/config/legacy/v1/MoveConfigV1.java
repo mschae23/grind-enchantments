@@ -17,15 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.mschae23.grindenchantments.config;
+package de.mschae23.grindenchantments.config.legacy.v1;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.MoveConfig;
+import de.mschae23.grindenchantments.cost.CostFunction;
 
-public record ClientConfig(boolean showLevelCost) {
-    public static final Codec<ClientConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(ClientConfig::showLevelCost)
-    ).apply(instance, instance.stable(ClientConfig::new)));
+@Deprecated
+public record MoveConfigV1(boolean enabled, CostFunction costFunction) {
+    public static final Codec<MoveConfigV1> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+        Codec.BOOL.fieldOf("enabled").forGetter(MoveConfigV1::enabled),
+        CostFunction.TYPE_CODEC.fieldOf("cost_config").forGetter(MoveConfigV1::costFunction)
+    ).apply(instance, instance.stable(MoveConfigV1::new)));
 
-    public static final ClientConfig DEFAULT = new ClientConfig(true);
+    public MoveConfig latest() {
+        return new MoveConfig(this.enabled, this.costFunction);
+    }
 }

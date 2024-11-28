@@ -31,7 +31,7 @@ import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
+import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.config.ResetRepairCostConfig;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
@@ -51,7 +51,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
             return ItemStack.EMPTY;
         }
 
-        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
         FilterConfig filter = config.filter();
 
         if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
@@ -74,7 +74,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isResetRepairCostOperation(input1, input2)) {
-            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
 
             return canTakeResult(input1, input2, () ->
                 GrindEnchantments.getLevelCost(input1, config.resetRepairCost().costFunction(), config.filter(), wrapperLookup), player);
@@ -89,7 +89,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
             return false;
         }
 
-        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
         FilterConfig filter = config.filter();
 
         input.setStack(0, ItemStack.EMPTY);
@@ -113,7 +113,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isResetRepairCostOperation(input1, input2)) {
-            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
 
             return GrindEnchantments.getLevelCost(input1, config.resetRepairCost().costFunction(), config.filter(), wrapperLookup);
         }

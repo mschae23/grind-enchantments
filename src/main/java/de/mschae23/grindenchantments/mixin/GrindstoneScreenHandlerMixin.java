@@ -31,7 +31,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.WorldEvents;
 import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
+import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,7 +79,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
     @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;insertItem(Lnet/minecraft/item/ItemStack;IIZ)Z", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onInsertResultItem(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack1, Slot slot, ItemStack itemStack2) {
-        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
 
         if (config.dedicatedServerConfig().alternativeCostDisplay()) {
             GrindEnchantments.removeLevelCostNbt(itemStack2);

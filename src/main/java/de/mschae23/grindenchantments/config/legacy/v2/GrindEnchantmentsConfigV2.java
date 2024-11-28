@@ -17,47 +17,47 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.mschae23.grindenchantments.config.v2;
+package de.mschae23.grindenchantments.config.legacy.v2;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
-import de.mschae23.grindenchantments.config.ClientConfig;
-import de.mschae23.grindenchantments.config.DedicatedServerConfig;
+import de.mschae23.grindenchantments.config.legacy.ClientConfig;
+import de.mschae23.grindenchantments.config.legacy.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.DisenchantConfig;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
+import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.config.MoveConfig;
 import de.mschae23.grindenchantments.config.ResetRepairCostConfig;
 import de.mschae23.grindenchantments.cost.FilterCostFunction;
 
 @Deprecated
 @SuppressWarnings("DeprecatedIsStillUsed")
-public record GrindEnchantmentsV2Config(DisenchantConfig disenchant, MoveConfig move, boolean allowCurses,
-                                        DedicatedServerConfig dedicatedServerConfig, ClientConfig clientConfig) implements ModConfig<GrindEnchantmentsV3Config> {
-    public static final MapCodec<GrindEnchantmentsV2Config> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        DisenchantConfig.CODEC.fieldOf("disenchant_to_book").forGetter(GrindEnchantmentsV2Config::disenchant),
-        MoveConfig.CODEC.fieldOf("move_enchantments").forGetter(GrindEnchantmentsV2Config::move),
-        Codec.BOOL.orElse(Boolean.FALSE).fieldOf("allow_removing_curses").forGetter(GrindEnchantmentsV2Config::allowCurses),
-        DedicatedServerConfig.CODEC.orElse(DedicatedServerConfig.DEFAULT).fieldOf("dedicated_server_options").forGetter(GrindEnchantmentsV2Config::dedicatedServerConfig),
-        ClientConfig.CODEC.fieldOf("client_options").forGetter(GrindEnchantmentsV2Config::clientConfig)
-    ).apply(instance, instance.stable(GrindEnchantmentsV2Config::new)));
+public record GrindEnchantmentsConfigV2(DisenchantConfig disenchant, MoveConfig move, boolean allowCurses,
+                                        DedicatedServerConfig dedicatedServerConfig, ClientConfig clientConfig) implements ModConfig<GrindEnchantmentsConfigV3> {
+    public static final MapCodec<GrindEnchantmentsConfigV2> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        DisenchantConfig.CODEC.fieldOf("disenchant_to_book").forGetter(GrindEnchantmentsConfigV2::disenchant),
+        MoveConfig.CODEC.fieldOf("move_enchantments").forGetter(GrindEnchantmentsConfigV2::move),
+        Codec.BOOL.orElse(Boolean.FALSE).fieldOf("allow_removing_curses").forGetter(GrindEnchantmentsConfigV2::allowCurses),
+        DedicatedServerConfig.CODEC.orElse(DedicatedServerConfig.DEFAULT).fieldOf("dedicated_server_options").forGetter(GrindEnchantmentsConfigV2::dedicatedServerConfig),
+        ClientConfig.CODEC.fieldOf("client_options").forGetter(GrindEnchantmentsConfigV2::clientConfig)
+    ).apply(instance, instance.stable(GrindEnchantmentsConfigV2::new)));
 
-    public static final Type<GrindEnchantmentsV3Config, GrindEnchantmentsV2Config> TYPE = new Type<>(2, TYPE_CODEC);
+    public static final Type<GrindEnchantmentsConfigV3, GrindEnchantmentsConfigV2> TYPE = new Type<>(2, TYPE_CODEC);
 
-    public static final GrindEnchantmentsV2Config DEFAULT =
-        new GrindEnchantmentsV2Config(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT, false, DedicatedServerConfig.DEFAULT, ClientConfig.DEFAULT);
+    public static final GrindEnchantmentsConfigV2 DEFAULT =
+        new GrindEnchantmentsConfigV2(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT, false, DedicatedServerConfig.DEFAULT, ClientConfig.DEFAULT);
 
     @Override
-    public Type<GrindEnchantmentsV3Config, ?> type() {
+    public Type<GrindEnchantmentsConfigV3, ?> type() {
         return TYPE;
     }
 
     @Override
-    public GrindEnchantmentsV3Config latest() {
-        return new GrindEnchantmentsV3Config(
+    public GrindEnchantmentsConfigV3 latest() {
+        return new GrindEnchantmentsConfigV3(
             new DisenchantConfig(this.disenchant.enabled(), this.disenchant.consumeItem(),
                 new FilterCostFunction(this.disenchant.costFunction())),
             new MoveConfig(this.move.enabled(),

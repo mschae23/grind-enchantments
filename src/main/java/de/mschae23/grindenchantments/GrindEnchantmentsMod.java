@@ -26,13 +26,14 @@ import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import de.mschae23.config.api.ConfigIo;
-import de.mschae23.config.api.ModConfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
-import de.mschae23.grindenchantments.config.v1.GrindEnchantmentsV1Config;
-import de.mschae23.grindenchantments.config.v2.GrindEnchantmentsV2Config;
+import com.mojang.serialization.MapCodec;
+import de.mschae23.config.api.ConfigIo;
+import de.mschae23.config.api.ModConfig;
+import de.mschae23.grindenchantments.config.legacy.v1.GrindEnchantmentsConfigV1;
+import de.mschae23.grindenchantments.config.legacy.v2.GrindEnchantmentsConfigV2;
+import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.cost.CostFunctionType;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
@@ -51,16 +52,27 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static final Path CONFIG_PATH = Paths.get(MODID + ".json");
 
-    private static final GrindEnchantmentsV3Config LATEST_CONFIG_DEFAULT = GrindEnchantmentsV3Config.DEFAULT;
-    private static final int LATEST_CONFIG_VERSION = LATEST_CONFIG_DEFAULT.version();
-    private static final Codec<ModConfig<GrindEnchantmentsV3Config>> CONFIG_CODEC = ModConfig.createCodec(LATEST_CONFIG_VERSION, GrindEnchantmentsMod::getConfigType);
-
-    private static GrindEnchantmentsV3Config CONFIG = LATEST_CONFIG_DEFAULT;
+    private static GrindEnchantmentsConfigV3 LEGACY_CONFIG = GrindEnchantmentsConfigV3.DEFAULT;
 
     @Override
     public void onInitialize() {
+        final GrindEnchantmentsConfigV3 legacyLatestConfigDefault = GrindEnchantmentsConfigV3.DEFAULT;
+        final int legacyLatestConfigVersion = legacyLatestConfigDefault.version();
+        @SuppressWarnings({"unchecked", "deprecation"})
+        final MapCodec<? extends ModConfig<GrindEnchantmentsConfigV3>>[] legacyConfigCodecs = new MapCodec[] {
+            GrindEnchantmentsConfigV1.TYPE_CODEC, GrindEnchantmentsConfigV2.TYPE_CODEC, GrindEnchantmentsConfigV3.TYPE_CODEC
+        };
+
+        final Codec<ModConfig<GrindEnchantmentsConfigV3>> legacyConfigCodec = ModConfig.createCodec(legacyLatestConfigVersion, version ->
+            getConfigType(0, legacyConfigCodecs, version));
+
+        // TODO Proper solution to client-side configs
+        // ClientLifecycleEvents.CLIENT_STARTED.register(client ->
+        //     CONFIG = ConfigIo.initializeConfig(Paths.get(MODID + ".json"), LATEST_CONFIG_VERSION, LATEST_CONFIG_DEFAULT, CONFIG_CODEC,
+        //         JsonOps.INSTANCE, LOGGER::info, LOGGER::error)
+        // );
         ServerLifecycleEvents.SERVER_STARTING.register(server ->
-            CONFIG = ConfigIo.initializeConfig(Paths.get(MODID + ".json"), LATEST_CONFIG_VERSION, LATEST_CONFIG_DEFAULT, CONFIG_CODEC,
+            LEGACY_CONFIG = ConfigIo.initializeConfig(Paths.get(MODID + ".json"), legacyLatestConfigVersion, legacyLatestConfigDefault, legacyConfigCodec,
                 RegistryOps.of(JsonOps.INSTANCE, server.getRegistryManager()), LOGGER::info, LOGGER::error)
         );
 
@@ -89,21 +101,22 @@ public class GrindEnchantmentsMod implements ModInitializer {
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static ModConfig.Type<GrindEnchantmentsV3Config, ?> getConfigType(int version) {
-        return new ModConfig.Type<>(version, switch (version) {
-            case 1 -> GrindEnchantmentsV1Config.TYPE_CODEC;
-            case 2 -> GrindEnchantmentsV2Config.TYPE_CODEC;
-            default -> GrindEnchantmentsV3Config.TYPE_CODEC;
-        });
+    private static <T extends ModConfig<T>> ModConfig.Type<T, ?> getConfigType(int versionOffset, MapCodec<? extends ModConfig<T>>[] codecs, int version) {
+        for (int i = codecs.length; i > 0; i--) {
+            if (version == i) {
+                return new ModConfig.Type<>(i + versionOffset, codecs[i - 1]);
+            }
+        }
+
+        return new ModConfig.Type<>(codecs.length + versionOffset, codecs[codecs.length - 1]);
     }
 
-    public static GrindEnchantmentsV3Config getConfig() {
-        return CONFIG;
+    public static GrindEnchantmentsConfigV3 getConfig() {
+        return LEGACY_CONFIG;
     }
 
     public static void log(Level level, Object message) {
-        LOGGER.log(level, "[Grind Enchantments] " + message);
+        LOGGER.log(level, "[Grind Enchantments] {}", message);
     }
 
     public static Identifier id(String path) {

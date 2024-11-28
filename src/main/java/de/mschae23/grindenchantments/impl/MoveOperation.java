@@ -38,7 +38,7 @@ import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.config.GrindEnchantmentsV3Config;
+import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -106,7 +106,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
 
             return canTakeResult(input1, input2, () ->
                 GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.filter(), wrapperLookup), player);
@@ -121,7 +121,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             return false;
         }
 
-        GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
         FilterConfig filter = config.filter();
 
         ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(input1);
@@ -159,7 +159,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isMoveOperation(input1, input2)) {
-            GrindEnchantmentsV3Config config = GrindEnchantmentsMod.getConfig();
+            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
 
             return GrindEnchantments.getLevelCost(input1, config.move().costFunction(), config.filter(), wrapperLookup);
         }
