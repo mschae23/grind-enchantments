@@ -23,21 +23,21 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
-import de.mschae23.grindenchantments.config.legacy.ClientConfig;
-import de.mschae23.grindenchantments.config.legacy.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.legacy.v2.GrindEnchantmentsConfigV2;
-import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.legacy.v3.ClientConfigV3;
+import de.mschae23.grindenchantments.config.legacy.v3.DedicatedServerConfigV3;
+import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
 
 @Deprecated
 @SuppressWarnings("DeprecatedIsStillUsed")
-public record GrindEnchantmentsConfigV1(de.mschae23.grindenchantments.config.legacy.v1.DisenchantConfigV1 disenchant, MoveConfigV1 move, boolean allowCurses,
-                                        DedicatedServerConfig dedicatedServerConfig, ClientConfig clientConfig) implements ModConfig<GrindEnchantmentsConfigV3> {
+public record GrindEnchantmentsConfigV1(DisenchantConfigV1 disenchant, MoveConfigV1 move, boolean allowCurses,
+                                        DedicatedServerConfigV3 dedicatedServerConfig, ClientConfigV3 clientConfig) implements ModConfig<GrindEnchantmentsConfigV3> {
     public static final MapCodec<GrindEnchantmentsConfigV1> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         DisenchantConfigV1.CODEC.fieldOf("disenchant_to_book").forGetter(GrindEnchantmentsConfigV1::disenchant),
         MoveConfigV1.CODEC.fieldOf("move_enchantments").forGetter(GrindEnchantmentsConfigV1::move),
         Codec.BOOL.orElse(Boolean.FALSE).fieldOf("allow_removing_curses").forGetter(GrindEnchantmentsConfigV1::allowCurses),
-        DedicatedServerConfig.CODEC.orElse(DedicatedServerConfig.DEFAULT).fieldOf("dedicated_server_options").forGetter(GrindEnchantmentsConfigV1::dedicatedServerConfig),
-        ClientConfig.CODEC.fieldOf("client_options").forGetter(GrindEnchantmentsConfigV1::clientConfig)
+        DedicatedServerConfigV3.CODEC.orElse(DedicatedServerConfigV3.DEFAULT).fieldOf("dedicated_server_options").forGetter(GrindEnchantmentsConfigV1::dedicatedServerConfig),
+        ClientConfigV3.CODEC.fieldOf("client_options").forGetter(GrindEnchantmentsConfigV1::clientConfig)
     ).apply(instance, instance.stable(GrindEnchantmentsConfigV1::new)));
 
     public static final Type<GrindEnchantmentsConfigV3, GrindEnchantmentsConfigV1> TYPE = new Type<>(1, TYPE_CODEC);

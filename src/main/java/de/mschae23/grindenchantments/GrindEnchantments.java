@@ -31,8 +31,8 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import de.mschae23.grindenchantments.config.legacy.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.FilterConfig;
+import de.mschae23.grindenchantments.config.legacy.v3.DedicatedServerConfigV3;
 import de.mschae23.grindenchantments.cost.CostFunction;
 
 public class GrindEnchantments {
@@ -47,7 +47,7 @@ public class GrindEnchantments {
         return filter.filter(EnchantmentHelper.getEnchantments(stack));
     }
 
-    public static ItemStack addLevelCostComponent(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfig config) {
+    public static ItemStack addLevelCostComponent(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfigV3 config) {
         if (!config.alternativeCostDisplay())
             return stack;
 

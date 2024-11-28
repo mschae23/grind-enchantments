@@ -19,21 +19,24 @@
 
 package de.mschae23.grindenchantments;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import net.minecraft.registry.RegistryOps;
+import java.util.Optional;
 import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
-import de.mschae23.config.api.ConfigIo;
 import de.mschae23.config.api.ModConfig;
+import de.mschae23.config.api.exception.ConfigException;
+import de.mschae23.config.impl.ConfigUtil;
 import de.mschae23.grindenchantments.config.legacy.v1.GrindEnchantmentsConfigV1;
 import de.mschae23.grindenchantments.config.legacy.v2.GrindEnchantmentsConfigV2;
-import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.cost.CostFunctionType;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
@@ -45,36 +48,17 @@ import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
     public static final Logger LOGGER = LogManager.getLogger("Grind Enchantments");
 
-    public static final Path CONFIG_PATH = Paths.get(MODID + ".json");
-
     private static GrindEnchantmentsConfigV3 LEGACY_CONFIG = GrindEnchantmentsConfigV3.DEFAULT;
 
     @Override
     public void onInitialize() {
-        final GrindEnchantmentsConfigV3 legacyLatestConfigDefault = GrindEnchantmentsConfigV3.DEFAULT;
-        final int legacyLatestConfigVersion = legacyLatestConfigDefault.version();
-        @SuppressWarnings({"unchecked", "deprecation"})
-        final MapCodec<? extends ModConfig<GrindEnchantmentsConfigV3>>[] legacyConfigCodecs = new MapCodec[] {
-            GrindEnchantmentsConfigV1.TYPE_CODEC, GrindEnchantmentsConfigV2.TYPE_CODEC, GrindEnchantmentsConfigV3.TYPE_CODEC
-        };
-
-        final Codec<ModConfig<GrindEnchantmentsConfigV3>> legacyConfigCodec = ModConfig.createCodec(legacyLatestConfigVersion, version ->
-            getConfigType(0, legacyConfigCodecs, version));
-
-        // TODO Proper solution to client-side configs
-        // ClientLifecycleEvents.CLIENT_STARTED.register(client ->
-        //     CONFIG = ConfigIo.initializeConfig(Paths.get(MODID + ".json"), LATEST_CONFIG_VERSION, LATEST_CONFIG_DEFAULT, CONFIG_CODEC,
-        //         JsonOps.INSTANCE, LOGGER::info, LOGGER::error)
-        // );
-        ServerLifecycleEvents.SERVER_STARTING.register(server ->
-            LEGACY_CONFIG = ConfigIo.initializeConfig(Paths.get(MODID + ".json"), legacyLatestConfigVersion, legacyLatestConfigDefault, legacyConfigCodec,
-                RegistryOps.of(JsonOps.INSTANCE, server.getRegistryManager()), LOGGER::info, LOGGER::error)
-        );
+        LEGACY_CONFIG = readLegacyConfig().orElse(GrindEnchantmentsConfigV3.DEFAULT);
 
         GrindEnchantmentsRegistries.init();
         CostFunctionType.init();
@@ -109,6 +93,41 @@ public class GrindEnchantmentsMod implements ModInitializer {
         }
 
         return new ModConfig.Type<>(codecs.length + versionOffset, codecs[codecs.length - 1]);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Optional<GrindEnchantmentsConfigV3> readLegacyConfig() {
+        final GrindEnchantmentsConfigV3 legacyLatestConfigDefault = GrindEnchantmentsConfigV3.DEFAULT;
+        final int legacyLatestConfigVersion = legacyLatestConfigDefault.version();
+        @SuppressWarnings({"unchecked", "deprecation"})
+        final MapCodec<? extends ModConfig<GrindEnchantmentsConfigV3>>[] legacyConfigCodecs = new MapCodec[] {
+            GrindEnchantmentsConfigV1.TYPE_CODEC, GrindEnchantmentsConfigV2.TYPE_CODEC, GrindEnchantmentsConfigV3.TYPE_CODEC
+        };
+
+        final Codec<ModConfig<GrindEnchantmentsConfigV3>> legacyConfigCodec = ModConfig.createCodec(legacyLatestConfigVersion, version ->
+            getConfigType(0, legacyConfigCodecs, version));
+
+        // Unfortunately, this requires some manual work and usage of codec config API's internals
+
+        Path configPath = FabricLoader.getInstance().getConfigDir().resolve(Paths.get(MODID + ".json"));
+        @Nullable
+        GrindEnchantmentsConfigV3 config = null;
+
+        if (Files.exists(configPath) && Files.isRegularFile(configPath)) {
+            try (InputStream input = Files.newInputStream(configPath)) {
+                log(Level.INFO, "Reading legacy config.");
+
+                @SuppressWarnings("UnstableApiUsage")
+                ModConfig<GrindEnchantmentsConfigV3> readConfig = ConfigUtil.decodeConfig(input, legacyConfigCodec, JsonOps.INSTANCE);
+                config = readConfig.latest();
+            } catch (IOException e) {
+                log(Level.ERROR, "IO exception while trying to read config: " + e.getLocalizedMessage());
+            } catch (ConfigException e) {
+                log(Level.ERROR, e.getLocalizedMessage());
+            }
+        }
+
+        return Optional.ofNullable(config);
     }
 
     public static GrindEnchantmentsConfigV3 getConfig() {

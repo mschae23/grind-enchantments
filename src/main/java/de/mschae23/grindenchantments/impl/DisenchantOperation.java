@@ -33,7 +33,7 @@ import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.config.legacy.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import org.jetbrains.annotations.NotNull;

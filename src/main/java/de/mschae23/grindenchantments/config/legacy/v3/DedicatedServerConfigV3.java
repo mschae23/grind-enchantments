@@ -17,15 +17,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.mschae23.grindenchantments.config.legacy;
+package de.mschae23.grindenchantments.config.legacy.v3;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-public record ClientConfig(boolean showLevelCost) {
-    public static final Codec<ClientConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(ClientConfig::showLevelCost)
-    ).apply(instance, instance.stable(ClientConfig::new)));
+@Deprecated
+public record DedicatedServerConfigV3(boolean alternativeCostDisplay) {
+    public static final Codec<DedicatedServerConfigV3> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+        Codec.BOOL.fieldOf("alternative_cost_display_enabled").forGetter(DedicatedServerConfigV3::alternativeCostDisplay)
+    ).apply(instance, instance.stable(DedicatedServerConfigV3::new)));
 
-    public static final ClientConfig DEFAULT = new ClientConfig(true);
+    public static final DedicatedServerConfigV3 DEFAULT = new DedicatedServerConfigV3(false);
 }
