@@ -34,7 +34,9 @@
     "java": ">=21",
 
     "fabric-api-base": "*",
-    "fabric-registry-sync-v0": "*"
+    "fabric-registry-sync-v0": "*",
+    "fabric-lifecycle-events-v1": "*",
+    "fabric-networking-api-v1": "*"
   },
   "suggests": {
   },

@@ -50,7 +50,8 @@ dependencies {
     [
         "fabric-api-base",
         "fabric-registry-sync-v0",
-        "fabric-lifecycle-events-v1"
+        "fabric-lifecycle-events-v1",
+        "fabric-networking-api-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
     modCompileOnly "io.github.fourmisain:TaxFreeLevels-fabric:$project.tax_free_levels_version"
