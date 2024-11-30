@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import net.minecraft.item.Item;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
@@ -43,13 +46,27 @@ public record ResetRepairCostConfig(boolean enabled, List<Identifier> catalystIt
         Codec.BOOL.fieldOf("enabled").forGetter(ResetRepairCostConfig::enabled),
         Codecs.listOrSingle(Identifier.CODEC).fieldOf("catalyst_items").forGetter(ResetRepairCostConfig::catalystItems),
         Codec.BOOL.fieldOf("requires_enchantment").forGetter(ResetRepairCostConfig::requiresEnchantment),
-        CostFunction.TYPE_CODEC.fieldOf("cost_function").forGetter(ResetRepairCostConfig::costFunction)
+        CostFunction.CODEC.fieldOf("cost_function").forGetter(ResetRepairCostConfig::costFunction)
     ).apply(instance, instance.stable(ResetRepairCostConfig::new)));
 
     public static final ResetRepairCostConfig DEFAULT = new ResetRepairCostConfig(false,
         List.of(Identifier.ofVanilla("diamond")), true,
         // Intentionally no filter function
         new TransformCostFunction(new AverageCountCostFunction(new CountLevelsCostFunction(1.0, 4.0)), 1.5, 4.0));
+
+    public static final ResetRepairCostConfig DISABLED = new ResetRepairCostConfig(false,
+        List.of(), false,
+        new CountLevelsCostFunction(1.0, 1.0));
+
+    public static PacketCodec<PacketByteBuf, ResetRepairCostConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
+        return PacketCodec.tuple(
+            PacketCodecs.BOOLEAN, ResetRepairCostConfig::enabled,
+            Identifier.PACKET_CODEC.collect(PacketCodecs.toList()), ResetRepairCostConfig::catalystItems,
+            PacketCodecs.BOOLEAN, ResetRepairCostConfig::requiresEnchantment,
+            costFunctionCodec, ResetRepairCostConfig::costFunction,
+            ResetRepairCostConfig::new
+        );
+    }
 
     public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
         Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ITEM);
@@ -66,5 +83,15 @@ public record ResetRepairCostConfig(boolean enabled, List<Identifier> catalystIt
             .flatMap(result -> result.getSecond().isEmpty() ? Stream.of(result.getFirst()) : Stream.empty())
             .map(Identifier::toString)
             .forEach(item -> GrindEnchantmentsMod.log(Level.WARN, "Reset repair cost config contains unknown catalyst item: " + item));
+    }
+
+    @Override
+    public String toString() {
+        return "ResetRepairCostConfig{" +
+            "enabled=" + this.enabled +
+            ", catalystItems=" + this.catalystItems +
+            ", requiresEnchantment=" + this.requiresEnchantment +
+            ", costFunction=" + this.costFunction +
+            '}';
     }
 }

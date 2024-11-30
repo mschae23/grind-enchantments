@@ -20,6 +20,9 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.EnchantmentTags;
 import com.mojang.serialization.Codec;
@@ -28,10 +31,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record CountLevelsCostFunction(double normalFactor, double treasureFactor) implements CostFunction {
-    public static final MapCodec<CountLevelsCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+    public static final MapCodec<CountLevelsCostFunction> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         Codec.DOUBLE.fieldOf("normal_factor").forGetter(CountLevelsCostFunction::normalFactor),
         Codec.DOUBLE.fieldOf("treasure_factor").forGetter(CountLevelsCostFunction::treasureFactor)
     ).apply(instance, instance.stable(CountLevelsCostFunction::new)));
+    public static final CostFunctionType<CountLevelsCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, CountLevelsCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -43,5 +47,17 @@ public record CountLevelsCostFunction(double normalFactor, double treasureFactor
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.COUNT_LEVELS;
+    }
+
+    public static PacketCodec<PacketByteBuf, CountLevelsCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.tuple(PacketCodecs.DOUBLE, CountLevelsCostFunction::normalFactor, PacketCodecs.DOUBLE, CountLevelsCostFunction::treasureFactor, CountLevelsCostFunction::new);
+    }
+
+    @Override
+    public String toString() {
+        return "CountLevelsCostFunction{" +
+            "normalFactor=" + this.normalFactor +
+            ", treasureFactor=" + this.treasureFactor +
+            '}';
     }
 }

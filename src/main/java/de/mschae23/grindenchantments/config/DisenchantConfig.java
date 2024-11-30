@@ -19,7 +19,11 @@
 
 package de.mschae23.grindenchantments.config;
 
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import de.mschae23.grindenchantments.cost.CostFunction;
+import de.mschae23.grindenchantments.cost.CountLevelsCostFunction;
 import de.mschae23.grindenchantments.cost.CountMinPowerCostFunction;
 import de.mschae23.grindenchantments.cost.FilterCostFunction;
 import de.mschae23.grindenchantments.cost.TransformCostFunction;
@@ -30,9 +34,30 @@ public record DisenchantConfig(boolean enabled, boolean consumeItem, CostFunctio
     public static final Codec<DisenchantConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(DisenchantConfig::enabled),
         Codec.BOOL.fieldOf("consume_enchanted_item").forGetter(DisenchantConfig::consumeItem),
-        CostFunction.TYPE_CODEC.fieldOf("cost_function").forGetter(DisenchantConfig::costFunction)
+        CostFunction.CODEC.fieldOf("cost_function").forGetter(DisenchantConfig::costFunction)
     ).apply(instance, instance.stable(DisenchantConfig::new)));
 
     public static final DisenchantConfig DEFAULT = new DisenchantConfig(true, false,
         new FilterCostFunction(new TransformCostFunction(new CountMinPowerCostFunction(), 0.3, 8.0)));
+
+    public static final DisenchantConfig DISABLED = new DisenchantConfig(false, false,
+        new CountLevelsCostFunction(1.0, 1.0));
+
+    public static PacketCodec<PacketByteBuf, DisenchantConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
+        return PacketCodec.tuple(
+            PacketCodecs.BOOLEAN, DisenchantConfig::enabled,
+            PacketCodecs.BOOLEAN, DisenchantConfig::consumeItem,
+            costFunctionCodec, DisenchantConfig::costFunction,
+            DisenchantConfig::new
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "DisenchantConfig{" +
+            "enabled=" + this.enabled +
+            ", consumeItem=" + this.consumeItem +
+            ", costFunction=" + this.costFunction +
+            '}';
+    }
 }

@@ -28,7 +28,7 @@ import de.mschae23.grindenchantments.cost.CostFunction;
 public record MoveConfigV1(boolean enabled, CostFunction costFunction) {
     public static final Codec<MoveConfigV1> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(MoveConfigV1::enabled),
-        CostFunction.TYPE_CODEC.fieldOf("cost_config").forGetter(MoveConfigV1::costFunction)
+        CostFunction.CODEC.fieldOf("cost_config").forGetter(MoveConfigV1::costFunction)
     ).apply(instance, instance.stable(MoveConfigV1::new)));
 
     public MoveConfig latest() {

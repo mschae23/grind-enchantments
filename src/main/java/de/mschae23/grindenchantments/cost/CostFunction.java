@@ -20,15 +20,26 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.Codec;
 import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 
 public interface CostFunction {
-    Codec<CostFunction> TYPE_CODEC = GrindEnchantmentsRegistries.COST_FUNCTION.getCodec().dispatch(CostFunction::getType, CostFunctionType::codec);
+    Codec<CostFunction> CODEC = GrindEnchantmentsRegistries.COST_FUNCTION.getCodec().dispatch(CostFunction::getType, CostFunctionType::codec);
 
     double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup);
 
     CostFunctionType<?> getType();
+
+    static PacketCodec<PacketByteBuf, CostFunction> createPacketCodec() {
+        return PacketCodec.recursive(delegateCodec ->
+            CostFunctionType.createPacketCodec().<PacketByteBuf>cast().dispatch(CostFunction::getType,
+                type -> type.packetCodec(delegateCodec)));
+    }
+
+    @Override
+    String toString();
 }

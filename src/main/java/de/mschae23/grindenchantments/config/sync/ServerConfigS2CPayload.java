@@ -24,15 +24,19 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
+import de.mschae23.grindenchantments.config.ServerConfig;
+import de.mschae23.grindenchantments.cost.CostFunction;
 
-public record ServerConfigS2CPayload() implements CustomPayload {
+public record ServerConfigS2CPayload(ServerConfig config) implements CustomPayload {
     public static final Identifier PACKET_ID = GrindEnchantmentsMod.id("server_config");
     public static final CustomPayload.Id<ServerConfigS2CPayload> ID = new CustomPayload.Id<>(PACKET_ID);
-
-    public static final PacketCodec<PacketByteBuf, ServerConfigS2CPayload> CODEC = PacketCodec.unit(new ServerConfigS2CPayload());
 
     @Override
     public Id<? extends CustomPayload> getId() {
         return ID;
+    }
+
+    public static PacketCodec<PacketByteBuf, ServerConfigS2CPayload> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
+        return ServerConfig.createPacketCodec(costFunctionCodec).xmap(ServerConfigS2CPayload::new, ServerConfigS2CPayload::config);
     }
 }

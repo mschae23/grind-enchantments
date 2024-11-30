@@ -36,7 +36,7 @@ public record ResetRepairCostConfigV3(boolean enabled, List<Identifier> catalyst
         Codec.BOOL.fieldOf("enabled").forGetter(ResetRepairCostConfigV3::enabled),
         Codecs.listOrSingle(Identifier.CODEC).fieldOf("catalyst_items").forGetter(ResetRepairCostConfigV3::catalystItems),
         Codec.BOOL.fieldOf("requires_enchantment").forGetter(ResetRepairCostConfigV3::requiresEnchantment),
-        CostFunction.TYPE_CODEC.fieldOf("cost_function").forGetter(ResetRepairCostConfigV3::costFunction)
+        CostFunction.CODEC.fieldOf("cost_function").forGetter(ResetRepairCostConfigV3::costFunction)
     ).apply(instance, instance.stable(ResetRepairCostConfigV3::new)));
 
     public static final ResetRepairCostConfigV3 DEFAULT = new ResetRepairCostConfigV3(false,

@@ -20,6 +20,9 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -27,11 +30,12 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record TransformCostFunction(CostFunction function, double factor, double offset) implements CostFunction {
-    public static final MapCodec<TransformCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        TYPE_CODEC.fieldOf("function").forGetter(TransformCostFunction::function),
+    public static final MapCodec<TransformCostFunction> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        CostFunction.CODEC.fieldOf("function").forGetter(TransformCostFunction::function),
         Codec.DOUBLE.fieldOf("factor").orElse(1.0).forGetter(TransformCostFunction::factor),
         Codec.DOUBLE.fieldOf("offset").orElse(0.0).forGetter(TransformCostFunction::offset)
     ).apply(instance, instance.stable(TransformCostFunction::new)));
+    public static final CostFunctionType.Impl<TransformCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, TransformCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -41,5 +45,18 @@ public record TransformCostFunction(CostFunction function, double factor, double
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.TRANSFORM;
+    }
+
+    public static PacketCodec<PacketByteBuf, TransformCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.tuple(delegateCodec, TransformCostFunction::function, PacketCodecs.DOUBLE, TransformCostFunction::factor, PacketCodecs.DOUBLE, TransformCostFunction::offset, TransformCostFunction::new);
+    }
+
+    @Override
+    public String toString() {
+        return "TransformCostFunction{" +
+            "function=" + this.function +
+            ", factor=" + this.factor +
+            ", offset=" + this.offset +
+            '}';
     }
 }

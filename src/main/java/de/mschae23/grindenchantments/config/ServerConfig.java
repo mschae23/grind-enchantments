@@ -19,12 +19,15 @@
 
 package de.mschae23.grindenchantments.config;
 
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
+import de.mschae23.grindenchantments.cost.CostFunction;
 
 public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRepairCostConfig resetRepairCost,
                            FilterConfig filter,
@@ -38,13 +41,15 @@ public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRe
         ).apply(instance, instance.stable(ServerConfig::new)));
 
     public static final ModConfig.Type<ServerConfig, ServerConfig> TYPE = new ModConfig.Type<>(4, TYPE_CODEC);
-    public static final ServerConfig DEFAULT = new ServerConfig(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT,
-        ResetRepairCostConfig.DEFAULT, FilterConfig.DEFAULT, DedicatedServerConfig.DEFAULT);
     @SuppressWarnings("unchecked")
     public static final ModConfig.Type<ServerConfig, ? extends ModConfig<ServerConfig>>[] VERSIONS = new ModConfig.Type[] { TYPE, };
-
     public static final Codec<ModConfig<ServerConfig>> CODEC = ModConfig.createCodec(TYPE.version(), version ->
         GrindEnchantmentsMod.getConfigType(VERSIONS, version));
+
+    public static final ServerConfig DEFAULT = new ServerConfig(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT,
+        ResetRepairCostConfig.DEFAULT, FilterConfig.DEFAULT, DedicatedServerConfig.DEFAULT);
+    public static final ServerConfig DISABLED = new ServerConfig(DisenchantConfig.DISABLED, MoveConfig.DISABLED,
+        ResetRepairCostConfig.DISABLED, FilterConfig.DISABLED, DedicatedServerConfig.DISABLED);
 
     @Override
     public Type<ServerConfig, ?> type() {
@@ -61,8 +66,30 @@ public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRe
         return true;
     }
 
+    public static PacketCodec<PacketByteBuf, ServerConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
+        return PacketCodec.tuple(
+            DisenchantConfig.createPacketCodec(costFunctionCodec), ServerConfig::disenchant,
+            MoveConfig.createPacketCodec(costFunctionCodec), ServerConfig::move,
+            ResetRepairCostConfig.createPacketCodec(costFunctionCodec), ServerConfig::resetRepairCost,
+            FilterConfig.createPacketCodec(), ServerConfig::filter,
+            DedicatedServerConfig.PACKET_CODEC, ServerConfig::dedicatedServerConfig,
+            ServerConfig::new
+        );
+    }
+
     public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
         this.filter.validateRegistryEntries(wrapperLookup);
         this.resetRepairCost.validateRegistryEntries(wrapperLookup);
+    }
+
+    @Override
+    public String toString() {
+        return "ServerConfig{" +
+            "disenchant=" + this.disenchant +
+            ", move=" + this.move +
+            ", resetRepairCost=" + this.resetRepairCost +
+            ", filter=" + this.filter +
+            ", dedicatedServerConfig=" + this.dedicatedServerConfig +
+            '}';
     }
 }

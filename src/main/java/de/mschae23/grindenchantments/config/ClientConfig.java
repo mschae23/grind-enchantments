@@ -25,10 +25,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 
-public record ClientConfig(boolean showLevelCost, boolean useDefaultIfUnsynced) implements ModConfig<ClientConfig> {
+public record ClientConfig(boolean showLevelCost, boolean useLocalIfUnsynced) implements ModConfig<ClientConfig> {
     public static final MapCodec<ClientConfig> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(ClientConfig::showLevelCost),
-        Codec.BOOL.fieldOf("use_default_server_config_if_unsynced").forGetter(ClientConfig::useDefaultIfUnsynced)
+        Codec.BOOL.fieldOf("use_local_server_config_if_unsynced").forGetter(ClientConfig::useLocalIfUnsynced)
     ).apply(instance, instance.stable(ClientConfig::new)));
 
     public static final ModConfig.Type<ClientConfig, ClientConfig> TYPE = new ModConfig.Type<>(4, TYPE_CODEC);
@@ -52,5 +52,13 @@ public record ClientConfig(boolean showLevelCost, boolean useDefaultIfUnsynced) 
     @Override
     public boolean shouldUpdate() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "ClientConfig{" +
+            "showLevelCost=" + this.showLevelCost +
+            ", useLocalIfUnsynced=" + this.useLocalIfUnsynced +
+            '}';
     }
 }

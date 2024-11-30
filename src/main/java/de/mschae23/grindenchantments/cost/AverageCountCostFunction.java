@@ -20,15 +20,18 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record AverageCountCostFunction(CostFunction function) implements CostFunction {
-    public static final MapCodec<AverageCountCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        CostFunction.TYPE_CODEC.fieldOf("function").forGetter(AverageCountCostFunction::function)
+    public static final MapCodec<AverageCountCostFunction> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        CostFunction.CODEC.fieldOf("function").forGetter(AverageCountCostFunction::function)
     ).apply(instance, instance.stable(AverageCountCostFunction::new)));
+    public static final CostFunctionType.Impl<AverageCountCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, AverageCountCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -45,5 +48,16 @@ public record AverageCountCostFunction(CostFunction function) implements CostFun
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.AVERAGE_COUNT;
+    }
+
+    public static PacketCodec<PacketByteBuf, AverageCountCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.tuple(delegateCodec, AverageCountCostFunction::function, AverageCountCostFunction::new);
+    }
+
+    @Override
+    public String toString() {
+        return "AverageCountCostFunction{" +
+            "function=" + this.function +
+            '}';
     }
 }

@@ -35,7 +35,9 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
@@ -54,6 +56,7 @@ import de.mschae23.grindenchantments.config.legacy.v1.GrindEnchantmentsConfigV1;
 import de.mschae23.grindenchantments.config.legacy.v2.GrindEnchantmentsConfigV2;
 import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
 import de.mschae23.grindenchantments.config.sync.ServerConfigS2CPayload;
+import de.mschae23.grindenchantments.cost.CostFunction;
 import de.mschae23.grindenchantments.cost.CostFunctionType;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
@@ -71,10 +74,10 @@ public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
     public static final Logger LOGGER = LogManager.getLogger("Grind Enchantments");
 
+    private static ClientConfig CLIENT_CONFIG = ClientConfig.DEFAULT;
     @Nullable
     private static ServerConfig SERVER_CONFIG = null;
-    @Nullable
-    private static ClientConfig CLIENT_CONFIG = null;
+    private static ServerConfig LOCAL_SERVER_CONFIG = ServerConfig.DEFAULT;
 
     @Override
     public void onInitialize() {
@@ -91,25 +94,38 @@ public class GrindEnchantmentsMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> SERVER_CONFIG = null);
 
         // Multiplayer
-        PayloadTypeRegistry.configurationS2C().register(ServerConfigS2CPayload.ID, ServerConfigS2CPayload.CODEC);
+        PayloadTypeRegistry.configurationS2C().register(ServerConfigS2CPayload.ID,
+            ServerConfigS2CPayload.createPacketCodec(CostFunction.createPacketCodec()));
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             CLIENT_CONFIG = GrindEnchantmentsMod.initializeClientConfig();
+            LOCAL_SERVER_CONFIG = GrindEnchantmentsMod.initializeServerConfig(RegistryWrapper.WrapperLookup.of(
+                Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION)));
 
             ClientConfigurationNetworking.registerGlobalReceiver(ServerConfigS2CPayload.ID, (payload, context) -> {
                 //noinspection resource
                 context.client().execute(() -> {
-                    log(Level.INFO, "Received server config");
-                    // TODO
+                    // log(Level.DEBUG, payload.config());
+                    SERVER_CONFIG = payload.config();
                 });
+            });
+            ClientPlayConnectionEvents.INIT.register((handler, client2) -> {
+                if (SERVER_CONFIG != null) {
+                    SERVER_CONFIG.validateRegistryEntries(handler.getRegistryManager());
+                }
             });
         });
         ServerConfigurationConnectionEvents.CONFIGURE.register((handler, server) -> {
             if (ServerConfigurationNetworking.canSend(handler, ServerConfigS2CPayload.ID)) {
-                log(Level.INFO, "Sent server config");
-                ServerConfigurationNetworking.send(handler, new ServerConfigS2CPayload());
+                ServerConfigurationNetworking.send(handler, new ServerConfigS2CPayload(SERVER_CONFIG != null ? SERVER_CONFIG : LOCAL_SERVER_CONFIG));
             }
         });
+
+        // Set server config to null when joining a world, so that it is known whether the server sent its config
+        ClientConfigurationConnectionEvents.INIT.register((handler, client) -> SERVER_CONFIG = null);
+        // Set server config to null when leaving the world too, for the same reason
+        ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> SERVER_CONFIG = null);
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SERVER_CONFIG = null);
 
         DisenchantOperation disenchant = new DisenchantOperation();
         MoveOperation move = new MoveOperation();
@@ -134,11 +150,13 @@ public class GrindEnchantmentsMod implements ModInitializer {
     }
 
     public static ServerConfig getServerConfig() {
-        return SERVER_CONFIG == null ? ServerConfig.DEFAULT : SERVER_CONFIG;
+        return SERVER_CONFIG == null ?
+            CLIENT_CONFIG.useLocalIfUnsynced() ? LOCAL_SERVER_CONFIG : ServerConfig.DISABLED
+            : SERVER_CONFIG;
     }
 
     public static ClientConfig getClientConfig() {
-        return CLIENT_CONFIG == null ? ClientConfig.DEFAULT : CLIENT_CONFIG;
+        return CLIENT_CONFIG;
     }
 
     public static <C extends ModConfig<C>> ModConfig.Type<C, ? extends ModConfig<C>> getConfigType(ModConfig.Type<C, ? extends ModConfig<C>>[] versions, int version) {

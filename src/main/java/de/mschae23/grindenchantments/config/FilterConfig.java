@@ -25,6 +25,9 @@ import java.util.stream.Stream;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
@@ -47,6 +50,17 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
     ).apply(instance, instance.stable(FilterConfig::new)));
 
     public static final FilterConfig DEFAULT = new FilterConfig(true, ItemConfig.DEFAULT, EnchantmentConfig.DEFAULT, FilterAction.IGNORE);
+    public static final FilterConfig DISABLED = new FilterConfig(false, ItemConfig.DEFAULT, EnchantmentConfig.DEFAULT, FilterAction.IGNORE);
+
+    public static PacketCodec<PacketByteBuf, FilterConfig> createPacketCodec() {
+        return PacketCodec.tuple(
+            PacketCodecs.BOOLEAN, FilterConfig::enabled,
+            ItemConfig.createPacketCodec(), FilterConfig::item,
+            EnchantmentConfig.createPacketCodec(), FilterConfig::enchantment,
+            FilterAction.PACKET_CODEC, FilterConfig::curses,
+            FilterConfig::new
+        );
+    }
 
     private boolean shouldDeny(ItemEnchantmentsComponent.Builder builder) {
         if (this.curses == FilterAction.DENY) {
@@ -111,6 +125,16 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         this.enchantment.validateRegistryEntries(wrapperLookup);
     }
 
+    @Override
+    public String toString() {
+        return "FilterConfig{" +
+            "enabled=" + this.enabled +
+            ", item=" + this.item +
+            ", enchantment=" + this.enchantment +
+            ", curses=" + this.curses +
+            '}';
+    }
+
     public record ItemConfig(List<Identifier> items, FilterAction action) {
         public static final Codec<ItemConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
@@ -118,6 +142,14 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         ).apply(instance, instance.stable(ItemConfig::new)));
 
         public static final ItemConfig DEFAULT = new ItemConfig(List.of(), FilterAction.DENY);
+
+        public static PacketCodec<PacketByteBuf, ItemConfig> createPacketCodec() {
+            return PacketCodec.tuple(
+                Identifier.PACKET_CODEC.collect(PacketCodecs.toList()), ItemConfig::items,
+                FilterAction.PACKET_CODEC, ItemConfig::action,
+                ItemConfig::new
+            );
+        }
 
         public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
             Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ITEM);
@@ -135,6 +167,14 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
                 .map(Identifier::toString)
                 .forEach(item -> GrindEnchantmentsMod.log(Level.WARN, "Filter config contains unknown item: " + item));
         }
+
+        @Override
+        public String toString() {
+            return "ItemConfig{" +
+                "items=" + this.items +
+                ", action=" + this.action +
+                '}';
+        }
     }
 
     public record EnchantmentConfig(List<Identifier> enchantments, FilterAction action) {
@@ -144,6 +184,14 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         ).apply(instance, instance.stable(EnchantmentConfig::new)));
 
         public static final EnchantmentConfig DEFAULT = new EnchantmentConfig(List.of(), FilterAction.IGNORE);
+
+        public static PacketCodec<PacketByteBuf, EnchantmentConfig> createPacketCodec() {
+            return PacketCodec.tuple(
+                Identifier.PACKET_CODEC.collect(PacketCodecs.toList()), EnchantmentConfig::enchantments,
+                FilterAction.PACKET_CODEC, EnchantmentConfig::action,
+                EnchantmentConfig::new
+            );
+        }
 
         public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
             Optional<? extends RegistryWrapper.Impl<Enchantment>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ENCHANTMENT);
@@ -160,6 +208,14 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
                 .flatMap(result -> result.getSecond().isEmpty() ? Stream.of(result.getFirst()) : Stream.empty())
                 .map(Identifier::toString)
                 .forEach(item -> GrindEnchantmentsMod.log(Level.WARN, "Filter config contains unknown enchantment: " + item));
+        }
+
+        @Override
+        public String toString() {
+            return "EnchantmentConfig{" +
+                "enchantments=" + this.enchantments +
+                ", action=" + this.action +
+                '}';
         }
     }
 }

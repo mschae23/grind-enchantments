@@ -20,15 +20,18 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
 public record FilterCostFunction(CostFunction function) implements CostFunction {
-    public static final MapCodec<FilterCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        CostFunction.TYPE_CODEC.fieldOf("function").forGetter(FilterCostFunction::function)
+    public static final MapCodec<FilterCostFunction> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        CostFunction.CODEC.fieldOf("function").forGetter(FilterCostFunction::function)
     ).apply(instance, instance.stable(FilterCostFunction::new)));
+    public static final CostFunctionType.Impl<FilterCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, FilterCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -38,5 +41,16 @@ public record FilterCostFunction(CostFunction function) implements CostFunction 
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.FILTER;
+    }
+
+    public static PacketCodec<PacketByteBuf, FilterCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.tuple(delegateCodec, FilterCostFunction::function, FilterCostFunction::new);
+    }
+
+    @Override
+    public String toString() {
+        return "FilterCostFunction{" +
+            "function=" + this.function +
+            '}';
     }
 }

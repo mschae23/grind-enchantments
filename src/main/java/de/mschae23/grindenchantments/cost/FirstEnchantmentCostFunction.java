@@ -21,6 +21,8 @@ package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import com.mojang.serialization.MapCodec;
@@ -29,10 +31,11 @@ import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.impl.MoveOperation;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
-public record FirstEnchantmentCostFunction(CostFunction delegate) implements CostFunction {
-    public static final MapCodec<FirstEnchantmentCostFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        TYPE_CODEC.fieldOf("function").forGetter(FirstEnchantmentCostFunction::delegate)
+public record FirstEnchantmentCostFunction(CostFunction function) implements CostFunction {
+    public static final MapCodec<FirstEnchantmentCostFunction> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        CostFunction.CODEC.fieldOf("function").forGetter(FirstEnchantmentCostFunction::function)
     ).apply(instance, instance.stable(FirstEnchantmentCostFunction::new)));
+    public static final CostFunctionType.Impl<FirstEnchantmentCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, FirstEnchantmentCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -44,12 +47,23 @@ public record FirstEnchantmentCostFunction(CostFunction delegate) implements Cos
             ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
             builder.add(firstEnchantment.left(), firstEnchantment.rightInt());
 
-            return this.delegate.getCost(builder.build(), filter, wrapperLookup);
+            return this.function.getCost(builder.build(), filter, wrapperLookup);
         }
     }
 
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.FIRST_ENCHANTMENT;
+    }
+
+    public static PacketCodec<PacketByteBuf, FirstEnchantmentCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.tuple(delegateCodec, FirstEnchantmentCostFunction::function, FirstEnchantmentCostFunction::new);
+    }
+
+    @Override
+    public String toString() {
+        return "FirstEnchantmentCostFunction{" +
+            "function=" + this.function +
+            '}';
     }
 }

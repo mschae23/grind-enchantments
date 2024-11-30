@@ -29,7 +29,7 @@ public record DisenchantConfigV1(boolean enabled, boolean consumeItem, CostFunct
     public static final Codec<DisenchantConfigV1> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(DisenchantConfigV1::enabled),
         Codec.BOOL.fieldOf("consume_enchanted_item").forGetter(DisenchantConfigV1::consumeItem),
-        CostFunction.TYPE_CODEC.fieldOf("cost_config").forGetter(DisenchantConfigV1::costFunction)
+        CostFunction.CODEC.fieldOf("cost_config").forGetter(DisenchantConfigV1::costFunction)
     ).apply(instance, instance.stable(DisenchantConfigV1::new)));
 
     public DisenchantConfig latest() {

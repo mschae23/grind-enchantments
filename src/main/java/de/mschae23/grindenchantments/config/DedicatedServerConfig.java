@@ -19,6 +19,9 @@
 
 package de.mschae23.grindenchantments.config;
 
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -27,5 +30,16 @@ public record DedicatedServerConfig(boolean alternativeCostDisplay) {
         Codec.BOOL.fieldOf("alternative_cost_display_enabled").forGetter(DedicatedServerConfig::alternativeCostDisplay)
     ).apply(instance, instance.stable(DedicatedServerConfig::new)));
 
+    public static final PacketCodec<PacketByteBuf, DedicatedServerConfig> PACKET_CODEC = PacketCodecs.BOOLEAN.xmap(
+        DedicatedServerConfig::new, DedicatedServerConfig::alternativeCostDisplay).cast();
+
     public static final DedicatedServerConfig DEFAULT = new DedicatedServerConfig(false);
+    public static final DedicatedServerConfig DISABLED = new DedicatedServerConfig(false);
+
+    @Override
+    public String toString() {
+        return "DedicatedServerConfig{" +
+            "alternativeCostDisplay=" + this.alternativeCostDisplay +
+            '}';
+    }
 }

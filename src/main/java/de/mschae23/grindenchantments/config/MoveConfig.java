@@ -19,21 +19,43 @@
 
 package de.mschae23.grindenchantments.config;
 
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.cost.CostFunction;
 import de.mschae23.grindenchantments.cost.CountLevelsCostFunction;
 import de.mschae23.grindenchantments.cost.FilterCostFunction;
-import de.mschae23.grindenchantments.cost.TransformCostFunction;
 import de.mschae23.grindenchantments.cost.FirstEnchantmentCostFunction;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.cost.TransformCostFunction;
 
 public record MoveConfig(boolean enabled, CostFunction costFunction) {
     public static final Codec<MoveConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(MoveConfig::enabled),
-        CostFunction.TYPE_CODEC.fieldOf("cost_function").forGetter(MoveConfig::costFunction)
+        CostFunction.CODEC.fieldOf("cost_function").forGetter(MoveConfig::costFunction)
     ).apply(instance, instance.stable(MoveConfig::new)));
 
     public static final MoveConfig DEFAULT = new MoveConfig(true,
         new FilterCostFunction(new FirstEnchantmentCostFunction(new TransformCostFunction(
             new CountLevelsCostFunction(3.0, 8.0), 0.5, 0.5))));
+
+    public static final MoveConfig DISABLED = new MoveConfig(false,
+        new CountLevelsCostFunction(1.0, 1.0));
+
+    public static PacketCodec<PacketByteBuf, MoveConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
+        return PacketCodec.tuple(
+            PacketCodecs.BOOLEAN, MoveConfig::enabled,
+            costFunctionCodec, MoveConfig::costFunction,
+            MoveConfig::new
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "MoveConfig{" +
+            "enabled=" + this.enabled +
+            ", costFunction=" + this.costFunction +
+            '}';
+    }
 }

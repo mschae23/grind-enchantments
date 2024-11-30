@@ -20,13 +20,16 @@
 package de.mschae23.grindenchantments.cost;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
 public class CountMinPowerCostFunction implements CostFunction {
     public static final CountMinPowerCostFunction INSTANCE = new CountMinPowerCostFunction();
-    public static final MapCodec<CountMinPowerCostFunction> CODEC = MapCodec.unit(() -> INSTANCE);
+    public static final MapCodec<CountMinPowerCostFunction> TYPE_CODEC = MapCodec.unit(() -> INSTANCE);
+    public static final CostFunctionType.Impl<CountMinPowerCostFunction> TYPE = new CostFunctionType.Impl<>(TYPE_CODEC, CountMinPowerCostFunction::packetCodec);
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -38,5 +41,14 @@ public class CountMinPowerCostFunction implements CostFunction {
     @Override
     public CostFunctionType<?> getType() {
         return CostFunctionType.COUNT_MIN_POWER;
+    }
+
+    public static PacketCodec<PacketByteBuf, CountMinPowerCostFunction> packetCodec(PacketCodec<PacketByteBuf, CostFunction> delegateCodec) {
+        return PacketCodec.unit(INSTANCE);
+    }
+
+    @Override
+    public String toString() {
+        return "CountMinPowerCostFunction{}";
     }
 }
