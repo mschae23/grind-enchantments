@@ -34,10 +34,6 @@ import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
@@ -74,10 +70,9 @@ public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
     public static final Logger LOGGER = LogManager.getLogger("Grind Enchantments");
 
-    private static ClientConfig CLIENT_CONFIG = ClientConfig.DEFAULT;
     @Nullable
-    private static ServerConfig SERVER_CONFIG = null;
-    private static ServerConfig LOCAL_SERVER_CONFIG = ServerConfig.DEFAULT;
+    static ServerConfig SERVER_CONFIG = null;
+    static ServerConfig LOCAL_SERVER_CONFIG = ServerConfig.DEFAULT;
 
     @Override
     public void onInitialize() {
@@ -90,6 +85,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             SERVER_CONFIG = initializeServerConfig(server.getRegistryManager());
             SERVER_CONFIG.validateRegistryEntries(server.getRegistryManager());
+            LOCAL_SERVER_CONFIG = SERVER_CONFIG;
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> SERVER_CONFIG = null);
 
@@ -97,35 +93,11 @@ public class GrindEnchantmentsMod implements ModInitializer {
         PayloadTypeRegistry.configurationS2C().register(ServerConfigS2CPayload.ID,
             ServerConfigS2CPayload.createPacketCodec(CostFunction.createPacketCodec()));
 
-        ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
-            CLIENT_CONFIG = GrindEnchantmentsMod.initializeClientConfig();
-            LOCAL_SERVER_CONFIG = GrindEnchantmentsMod.initializeServerConfig(RegistryWrapper.WrapperLookup.of(
-                Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION)));
-
-            ClientConfigurationNetworking.registerGlobalReceiver(ServerConfigS2CPayload.ID, (payload, context) -> {
-                //noinspection resource
-                context.client().execute(() -> {
-                    // log(Level.DEBUG, payload.config());
-                    SERVER_CONFIG = payload.config();
-                });
-            });
-            ClientPlayConnectionEvents.INIT.register((handler, client2) -> {
-                if (SERVER_CONFIG != null) {
-                    SERVER_CONFIG.validateRegistryEntries(handler.getRegistryManager());
-                }
-            });
-        });
         ServerConfigurationConnectionEvents.CONFIGURE.register((handler, server) -> {
             if (ServerConfigurationNetworking.canSend(handler, ServerConfigS2CPayload.ID)) {
                 ServerConfigurationNetworking.send(handler, new ServerConfigS2CPayload(SERVER_CONFIG != null ? SERVER_CONFIG : LOCAL_SERVER_CONFIG));
             }
         });
-
-        // Set server config to null when joining a world, so that it is known whether the server sent its config
-        ClientConfigurationConnectionEvents.INIT.register((handler, client) -> SERVER_CONFIG = null);
-        // Set server config to null when leaving the world too, for the same reason
-        ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> SERVER_CONFIG = null);
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SERVER_CONFIG = null);
 
         DisenchantOperation disenchant = new DisenchantOperation();
         MoveOperation move = new MoveOperation();
@@ -151,12 +123,12 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static ServerConfig getServerConfig() {
         return SERVER_CONFIG == null ?
-            CLIENT_CONFIG.useLocalIfUnsynced() ? LOCAL_SERVER_CONFIG : ServerConfig.DISABLED
+            GrindEnchantmentsClient.getClientConfig().sync().useLocalIfUnsynced() ? LOCAL_SERVER_CONFIG : ServerConfig.DISABLED
             : SERVER_CONFIG;
     }
 
     public static ClientConfig getClientConfig() {
-        return CLIENT_CONFIG;
+        return GrindEnchantmentsClient.getClientConfig();
     }
 
     public static <C extends ModConfig<C>> ModConfig.Type<C, ? extends ModConfig<C>> getConfigType(ModConfig.Type<C, ? extends ModConfig<C>>[] versions, int version) {
@@ -192,7 +164,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
                         ConfigIo.encodeConfig(writer, codec, config.latest(), ops);
                     } catch (IOException e) {
-                        log(Level.ERROR, "IO exception while trying to write updated config: " + e.getLocalizedMessage());
+                        log(Level.ERROR, "IO exception while trying to write updated " + kind + " config: " + e.getLocalizedMessage());
                     } catch (ConfigException e) {
                         log(Level.ERROR, e.getLocalizedMessage());
                     }
@@ -203,14 +175,18 @@ public class GrindEnchantmentsMod implements ModInitializer {
                 log(Level.ERROR, e.getLocalizedMessage());
             }
         } else {
-            // Write default config if the file doesn't exist
-            try (OutputStream output = Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-                 OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(output))) {
-                log(Level.INFO, "Writing default " + kind + " config.");
+            try {
+                Files.createDirectories(filePath.getParent());
 
-                ConfigIo.encodeConfig(writer, codec, latestDefault, ops);
+                // Write default config if the file doesn't exist
+                try (OutputStream output = Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                     OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(output))) {
+                    log(Level.INFO, "Writing default " + kind + " config.");
+
+                    ConfigIo.encodeConfig(writer, codec, latestDefault, ops);
+                }
             } catch (IOException e) {
-                log(Level.ERROR, "IO exception while trying to write config: " + e.getLocalizedMessage());
+                log(Level.ERROR, "IO exception while trying to write " + kind + " config: " + e.getLocalizedMessage());
             } catch (ConfigException e) {
                 log(Level.ERROR, e.getLocalizedMessage());
             }
@@ -224,7 +200,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
             JsonOps.INSTANCE, "client");
     }
 
-    private static ServerConfig initializeServerConfig(RegistryWrapper.WrapperLookup wrapperLookup) {
+    public static ServerConfig initializeServerConfig(RegistryWrapper.WrapperLookup wrapperLookup) {
         return initializeGenericConfig(Path.of("server.json"), ServerConfig.DEFAULT, ServerConfig.CODEC,
             RegistryOps.of(JsonOps.INSTANCE, wrapperLookup), "server");
     }

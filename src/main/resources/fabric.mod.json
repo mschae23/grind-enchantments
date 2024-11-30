@@ -21,6 +21,9 @@
   "entrypoints": {
     "main": [
       "de.mschae23.grindenchantments.GrindEnchantmentsMod"
+    ],
+    "client": [
+      "de.mschae23.grindenchantments.GrindEnchantmentsClient"
     ]
   },
   "mixins": [

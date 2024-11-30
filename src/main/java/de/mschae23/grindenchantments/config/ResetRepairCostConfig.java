@@ -91,7 +91,7 @@ public record ResetRepairCostConfig(boolean enabled, List<Identifier> catalystIt
             "enabled=" + this.enabled +
             ", catalystItems=" + this.catalystItems +
             ", requiresEnchantment=" + this.requiresEnchantment +
-            ", costFunction=" + this.costFunction +
+            ", costConfig=" + this.costFunction +
             '}';
     }
 }

@@ -23,6 +23,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
 import de.mschae23.grindenchantments.config.ClientConfig;
+import de.mschae23.grindenchantments.config.ClientSyncConfig;
 import de.mschae23.grindenchantments.config.DisenchantConfig;
 import de.mschae23.grindenchantments.config.MoveConfig;
 import de.mschae23.grindenchantments.config.ServerConfig;
@@ -67,6 +68,6 @@ public record GrindEnchantmentsConfigV3(DisenchantConfig disenchant, MoveConfig 
     }
 
     public ClientConfig toClientConfig() {
-        return new ClientConfig(this.clientConfig.showLevelCost(), true);
+        return new ClientConfig(this.clientConfig.showLevelCost(), new ClientSyncConfig(true, false));
     }
 }

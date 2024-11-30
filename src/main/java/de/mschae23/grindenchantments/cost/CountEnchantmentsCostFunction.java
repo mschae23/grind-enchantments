@@ -49,4 +49,9 @@ public class CountEnchantmentsCostFunction implements CostFunction {
     public String toString() {
         return "CountEnchantmentsCostFunction{}";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof CountEnchantmentsCostFunction;
+    }
 }

@@ -22,16 +22,15 @@ package de.mschae23.grindenchantments.config.legacy.v1;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.MoveConfig;
-import de.mschae23.grindenchantments.cost.CostFunction;
 
 @Deprecated
-public record MoveConfigV1(boolean enabled, CostFunction costFunction) {
+public record MoveConfigV1(boolean enabled, CostConfigV1 costConfig) {
     public static final Codec<MoveConfigV1> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(MoveConfigV1::enabled),
-        CostFunction.CODEC.fieldOf("cost_config").forGetter(MoveConfigV1::costFunction)
+        CostConfigV1.CODEC.fieldOf("cost_config").forGetter(MoveConfigV1::costConfig)
     ).apply(instance, instance.stable(MoveConfigV1::new)));
 
     public MoveConfig latest() {
-        return new MoveConfig(this.enabled, this.costFunction);
+        return new MoveConfig(this.enabled, this.costConfig.latest());
     }
 }

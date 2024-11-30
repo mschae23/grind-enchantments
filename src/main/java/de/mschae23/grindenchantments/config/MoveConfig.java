@@ -55,7 +55,7 @@ public record MoveConfig(boolean enabled, CostFunction costFunction) {
     public String toString() {
         return "MoveConfig{" +
             "enabled=" + this.enabled +
-            ", costFunction=" + this.costFunction +
+            ", costConfig=" + this.costFunction +
             '}';
     }
 }

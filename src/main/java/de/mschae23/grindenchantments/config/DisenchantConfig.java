@@ -57,7 +57,7 @@ public record DisenchantConfig(boolean enabled, boolean consumeItem, CostFunctio
         return "DisenchantConfig{" +
             "enabled=" + this.enabled +
             ", consumeItem=" + this.consumeItem +
-            ", costFunction=" + this.costFunction +
+            ", costConfig=" + this.costFunction +
             '}';
     }
 }

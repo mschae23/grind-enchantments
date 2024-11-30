@@ -20,18 +20,20 @@
 package de.mschae23.grindenchantments.config.legacy.v1;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import de.mschae23.grindenchantments.config.DisenchantConfig;
+import de.mschae23.grindenchantments.cost.CostFunction;
+import de.mschae23.grindenchantments.cost.TransformCostFunction;
 
 @Deprecated
-public record DisenchantConfigV1(boolean enabled, boolean consumeItem, CostConfigV1 costConfig) {
-    public static final Codec<DisenchantConfigV1> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Codec.BOOL.fieldOf("enabled").forGetter(DisenchantConfigV1::enabled),
-        Codec.BOOL.fieldOf("consume_enchanted_item").forGetter(DisenchantConfigV1::consumeItem),
-        CostConfigV1.CODEC.fieldOf("cost_config").forGetter(DisenchantConfigV1::costConfig)
-    ).apply(instance, instance.stable(DisenchantConfigV1::new)));
+public record CostConfigV1(CostFunction function, double factor, double offset) {
+    public static final MapCodec<CostConfigV1> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        CostFunction.CODEC.fieldOf("count_mode").forGetter(CostConfigV1::function),
+        Codec.DOUBLE.fieldOf("cost_factor").orElse(1.0).forGetter(CostConfigV1::factor),
+        Codec.DOUBLE.fieldOf("cost_offset").orElse(0.0).forGetter(CostConfigV1::offset)
+    ).apply(instance, instance.stable(CostConfigV1::new)));
 
-    public DisenchantConfig latest() {
-        return new DisenchantConfig(this.enabled, this.consumeItem, this.costConfig.latest());
+    public CostFunction latest() {
+        return new TransformCostFunction(this.function, this.factor, this.offset);
     }
 }

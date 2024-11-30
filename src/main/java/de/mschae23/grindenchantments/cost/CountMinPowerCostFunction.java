@@ -51,4 +51,9 @@ public class CountMinPowerCostFunction implements CostFunction {
     public String toString() {
         return "CountMinPowerCostFunction{}";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof CountMinPowerCostFunction;
+    }
 }
