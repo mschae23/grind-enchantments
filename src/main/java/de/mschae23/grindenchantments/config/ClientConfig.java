@@ -23,17 +23,21 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
+import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 
-public record ClientConfig(boolean showLevelCost) implements ModConfig<ClientConfig> {
-    public static final MapCodec<ClientConfig> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-        Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(ClientConfig::showLevelCost)
+public record ClientConfig(boolean showLevelCost, boolean useDefaultIfUnsynced) implements ModConfig<ClientConfig> {
+    public static final MapCodec<ClientConfig> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        Codec.BOOL.fieldOf("show_enchantment_cost").forGetter(ClientConfig::showLevelCost),
+        Codec.BOOL.fieldOf("use_default_server_config_if_unsynced").forGetter(ClientConfig::useDefaultIfUnsynced)
     ).apply(instance, instance.stable(ClientConfig::new)));
 
-    public static final ModConfig.Type<ClientConfig, ClientConfig> TYPE = new ModConfig.Type<>(4, CODEC);
-    public static final ClientConfig DEFAULT = new ClientConfig(true);
-
+    public static final ModConfig.Type<ClientConfig, ClientConfig> TYPE = new ModConfig.Type<>(4, TYPE_CODEC);
+    public static final ClientConfig DEFAULT = new ClientConfig(true, true);
     @SuppressWarnings("unchecked")
     public static final ModConfig.Type<ClientConfig, ? extends ModConfig<ClientConfig>>[] VERSIONS = new ModConfig.Type[] { TYPE, };
+
+    public static final Codec<ModConfig<ClientConfig>> CODEC = ModConfig.createCodec(TYPE.version(), version ->
+        GrindEnchantmentsMod.getConfigType(VERSIONS, version));
 
     @Override
     public Type<ClientConfig, ?> type() {

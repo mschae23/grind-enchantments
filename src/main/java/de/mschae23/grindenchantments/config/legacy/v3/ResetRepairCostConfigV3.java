@@ -24,6 +24,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.Codecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.ResetRepairCostConfig;
 import de.mschae23.grindenchantments.cost.AverageCountCostFunction;
 import de.mschae23.grindenchantments.cost.CostFunction;
 import de.mschae23.grindenchantments.cost.CountLevelsCostFunction;
@@ -42,4 +43,8 @@ public record ResetRepairCostConfigV3(boolean enabled, List<Identifier> catalyst
         List.of(Identifier.ofVanilla("diamond")), true,
         // Intentionally no filter function
         new TransformCostFunction(new AverageCountCostFunction(new CountLevelsCostFunction(1.0, 4.0)), 1.5, 4.0));
+
+    public ResetRepairCostConfig latest() {
+        return new ResetRepairCostConfig(this.enabled, this.catalystItems, this.requiresEnchantment, this.costFunction);
+    }
 }

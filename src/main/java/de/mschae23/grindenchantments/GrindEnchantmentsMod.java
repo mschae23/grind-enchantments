@@ -19,12 +19,17 @@
 
 package de.mschae23.grindenchantments;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
@@ -48,13 +53,13 @@ import de.mschae23.grindenchantments.config.ServerConfig;
 import de.mschae23.grindenchantments.config.legacy.v1.GrindEnchantmentsConfigV1;
 import de.mschae23.grindenchantments.config.legacy.v2.GrindEnchantmentsConfigV2;
 import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.sync.ServerConfigS2CPayload;
 import de.mschae23.grindenchantments.cost.CostFunctionType;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import de.mschae23.grindenchantments.impl.DisenchantOperation;
 import de.mschae23.grindenchantments.impl.MoveOperation;
 import de.mschae23.grindenchantments.impl.ResetRepairCostOperation;
-import de.mschae23.grindenchantments.config.sync.ServerConfigS2CPayload;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
@@ -66,8 +71,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
     public static final Logger LOGGER = LogManager.getLogger("Grind Enchantments");
 
-    @Deprecated
-    private static GrindEnchantmentsConfigV3 LEGACY_CONFIG = GrindEnchantmentsConfigV3.DEFAULT;
     @Nullable
     private static ServerConfig SERVER_CONFIG = null;
     @Nullable
@@ -75,9 +78,14 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        GrindEnchantmentsRegistries.init();
+        CostFunctionType.init();
+
+        convertLegacyConfig();
+
         // Singleplayer or on server
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            SERVER_CONFIG = readServerConfig(server.getRegistryManager()).orElse(ServerConfig.DEFAULT);
+            SERVER_CONFIG = initializeServerConfig(server.getRegistryManager());
             SERVER_CONFIG.validateRegistryEntries(server.getRegistryManager());
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> SERVER_CONFIG = null);
@@ -86,7 +94,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
         PayloadTypeRegistry.configurationS2C().register(ServerConfigS2CPayload.ID, ServerConfigS2CPayload.CODEC);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
-            CLIENT_CONFIG = GrindEnchantmentsMod.readClientConfig().orElse(ClientConfig.DEFAULT);
+            CLIENT_CONFIG = GrindEnchantmentsMod.initializeClientConfig();
 
             ClientConfigurationNetworking.registerGlobalReceiver(ServerConfigS2CPayload.ID, (payload, context) -> {
                 //noinspection resource
@@ -102,12 +110,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
                 ServerConfigurationNetworking.send(handler, new ServerConfigS2CPayload());
             }
         });
-
-        //noinspection deprecation
-        LEGACY_CONFIG = readLegacyConfig().orElse(GrindEnchantmentsConfigV3.DEFAULT);
-
-        GrindEnchantmentsRegistries.init();
-        CostFunctionType.init();
 
         DisenchantOperation disenchant = new DisenchantOperation();
         MoveOperation move = new MoveOperation();
@@ -139,12 +141,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
         return CLIENT_CONFIG == null ? ClientConfig.DEFAULT : CLIENT_CONFIG;
     }
 
-    @Deprecated
-    public static GrindEnchantmentsConfigV3 getLegacyConfig() {
-        return LEGACY_CONFIG;
-    }
-
-    private static <C extends ModConfig<C>> ModConfig.Type<C, ? extends ModConfig<C>> getConfigType(ModConfig.Type<C, ? extends ModConfig<C>>[] versions, int version) {
+    public static <C extends ModConfig<C>> ModConfig.Type<C, ? extends ModConfig<C>> getConfigType(ModConfig.Type<C, ? extends ModConfig<C>>[] versions, int version) {
         for (int i = versions.length - 1; i >= 0; i--) {
             ModConfig.Type<C, ? extends ModConfig<C>> v = versions[i];
 
@@ -156,40 +153,118 @@ public class GrindEnchantmentsMod implements ModInitializer {
         return versions[versions.length - 1];
     }
 
-    private static <C extends ModConfig<C>> Optional<C> readGenericConfig(Path configName, Codec<ModConfig<C>> codec,
-                                                                          DynamicOps<JsonElement> ops, String kind) {
+    private static <C extends ModConfig<C>> C initializeGenericConfig(Path configName, C latestDefault, Codec<ModConfig<C>> codec,
+                                                                      DynamicOps<JsonElement> ops, String kind) {
+        // modified version of ConfigIoImpl.initializeConfig from codec-config-api
         Path filePath = FabricLoader.getInstance().getConfigDir().resolve(MODID).resolve(configName);
-        @Nullable
-        C config = null;
+        C latestConfig = latestDefault;
 
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
             try (InputStream input = Files.newInputStream(filePath)) {
                 log(Level.INFO, "Reading " + kind + " config.");
 
-                ModConfig<C> readConfig = ConfigIo.decodeConfig(input, codec, ops);
-                config = readConfig.latest();
+                ModConfig<C> config = ConfigIo.decodeConfig(input, codec, ops);
+                latestConfig = config.latest();
+
+                if (config.shouldUpdate() && config.version() < latestDefault.version()) {
+                    // Default OpenOptions are CREATE, TRUNCATE_EXISTING, and WRITE
+                    try (OutputStream output = Files.newOutputStream(filePath);
+                         OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(output))) {
+                        log(Level.INFO, "Writing updated " + kind + " config.");
+
+                        ConfigIo.encodeConfig(writer, codec, config.latest(), ops);
+                    } catch (IOException e) {
+                        log(Level.ERROR, "IO exception while trying to write updated config: " + e.getLocalizedMessage());
+                    } catch (ConfigException e) {
+                        log(Level.ERROR, e.getLocalizedMessage());
+                    }
+                }
             } catch (IOException e) {
                 log(Level.ERROR, "IO exception while trying to read " + kind + " config: " + e.getLocalizedMessage());
             } catch (ConfigException e) {
                 log(Level.ERROR, e.getLocalizedMessage());
             }
+        } else {
+            // Write default config if the file doesn't exist
+            try (OutputStream output = Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                 OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(output))) {
+                log(Level.INFO, "Writing default " + kind + " config.");
+
+                ConfigIo.encodeConfig(writer, codec, latestDefault, ops);
+            } catch (IOException e) {
+                log(Level.ERROR, "IO exception while trying to write config: " + e.getLocalizedMessage());
+            } catch (ConfigException e) {
+                log(Level.ERROR, e.getLocalizedMessage());
+            }
         }
 
-        return Optional.ofNullable(config);
+        return latestConfig;
     }
 
-    public static Optional<ClientConfig> readClientConfig() {
-        return readGenericConfig(Path.of("client.json"), ModConfig.<ClientConfig>createCodec(ClientConfig.TYPE.version(), version ->
-            getConfigType(ClientConfig.VERSIONS, version)), JsonOps.INSTANCE, "client");
+    public static ClientConfig initializeClientConfig() {
+        return initializeGenericConfig(Path.of("client.json"), ClientConfig.DEFAULT, ClientConfig.CODEC,
+            JsonOps.INSTANCE, "client");
     }
 
-    private static Optional<ServerConfig> readServerConfig(RegistryWrapper.WrapperLookup wrapperLookup) {
-        return readGenericConfig(Path.of("server.json"), ModConfig.<ServerConfig>createCodec(ServerConfig.TYPE.version(), version ->
-            getConfigType(ServerConfig.VERSIONS, version)), RegistryOps.of(JsonOps.INSTANCE, wrapperLookup), "server");
+    private static ServerConfig initializeServerConfig(RegistryWrapper.WrapperLookup wrapperLookup) {
+        return initializeGenericConfig(Path.of("server.json"), ServerConfig.DEFAULT, ServerConfig.CODEC,
+            RegistryOps.of(JsonOps.INSTANCE, wrapperLookup), "server");
     }
 
     @SuppressWarnings("deprecation")
-    private static Optional<GrindEnchantmentsConfigV3> readLegacyConfig() {
+    private static void convertLegacyConfig() {
+        final Path newConfigDirPath = FabricLoader.getInstance().getConfigDir().resolve(MODID);
+
+        if (!Files.isDirectory(newConfigDirPath)) {
+            RegistryWrapper.WrapperLookup wrapperLookup = RegistryWrapper.WrapperLookup.of(Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION));
+            Optional<GrindEnchantmentsConfigV3> legacyConfigOpt = readLegacyConfig(wrapperLookup);
+
+            if (legacyConfigOpt.isPresent()) {
+                GrindEnchantmentsConfigV3 legacyConfig = legacyConfigOpt.get();
+                ServerConfig serverConfig = legacyConfig.toServerConfig();
+                ClientConfig clientConfig = legacyConfig.toClientConfig();
+
+                try {
+                    final Path serverConfigPath = newConfigDirPath.resolve("server.json");
+                    final Path clientConfigPath = newConfigDirPath.resolve("client.json");
+
+                    Files.createDirectories(newConfigDirPath);
+                    boolean success = true;
+
+                    try (OutputStream outputStream = Files.newOutputStream(serverConfigPath);
+                         OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(outputStream))) {
+                        log(Level.INFO, "Writing converted server config.");
+
+                        ConfigIo.encodeConfig(writer, ServerConfig.CODEC, serverConfig, RegistryOps.of(JsonOps.INSTANCE, wrapperLookup));
+                    } catch (ConfigException e) {
+                        log(Level.ERROR, e.getLocalizedMessage());
+                        success = false;
+                    }
+
+                    try (OutputStream outputStream = Files.newOutputStream(clientConfigPath);
+                         OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(outputStream))) {
+                        log(Level.INFO, "Writing converted client config.");
+
+                        ConfigIo.encodeConfig(writer, ClientConfig.CODEC, clientConfig, RegistryOps.of(JsonOps.INSTANCE, wrapperLookup));
+                    } catch (ConfigException e) {
+                        log(Level.ERROR, e.getLocalizedMessage());
+                        success = false;
+                    }
+
+                    if (success) {
+                        Path configDir = FabricLoader.getInstance().getConfigDir();
+                        // Move to grindenchantments.json.old if conversion succeeds
+                        Files.move(configDir.resolve(MODID + ".json"), configDir.resolve(MODID + ".json.old"));
+                    }
+                } catch (IOException e) {
+                    log(Level.ERROR, "IO exception while trying to convert legacy config: " + e.getLocalizedMessage());
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Optional<GrindEnchantmentsConfigV3> readLegacyConfig(RegistryWrapper.WrapperLookup wrapperLookup) {
         final GrindEnchantmentsConfigV3 legacyLatestConfigDefault = GrindEnchantmentsConfigV3.DEFAULT;
         final int legacyLatestConfigVersion = legacyLatestConfigDefault.version();
         @SuppressWarnings({"unchecked", "deprecation"})
@@ -208,7 +283,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
             try (InputStream input = Files.newInputStream(configPath)) {
                 log(Level.INFO, "Reading legacy config.");
 
-                ModConfig<GrindEnchantmentsConfigV3> readConfig = ConfigIo.decodeConfig(input, legacyConfigCodec, JsonOps.INSTANCE);
+                ModConfig<GrindEnchantmentsConfigV3> readConfig = ConfigIo.decodeConfig(input, legacyConfigCodec, RegistryOps.of(JsonOps.INSTANCE, wrapperLookup));
                 config = readConfig.latest();
             } catch (IOException e) {
                 log(Level.ERROR, "IO exception while trying to read config: " + e.getLocalizedMessage());

@@ -25,6 +25,7 @@ import net.minecraft.util.dynamic.Codecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.config.FilterAction;
+import de.mschae23.grindenchantments.config.FilterConfig;
 
 @Deprecated
 public record FilterConfigV3(boolean enabled, ItemConfig item, EnchantmentConfig enchantment, FilterAction curses) {
@@ -36,6 +37,11 @@ public record FilterConfigV3(boolean enabled, ItemConfig item, EnchantmentConfig
     ).apply(instance, instance.stable(FilterConfigV3::new)));
 
     public static final FilterConfigV3 DEFAULT = new FilterConfigV3(true, ItemConfig.DEFAULT, EnchantmentConfig.DEFAULT, FilterAction.IGNORE);
+
+    public FilterConfig latest() {
+        return new FilterConfig(this.enabled, new FilterConfig.ItemConfig(this.item.items, this.item.action),
+            new FilterConfig.EnchantmentConfig(this.enchantment.enchantments, this.enchantment.action), this.curses);
+    }
 
     public record ItemConfig(List<Identifier> items, FilterAction action) {
         public static final Codec<ItemConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(

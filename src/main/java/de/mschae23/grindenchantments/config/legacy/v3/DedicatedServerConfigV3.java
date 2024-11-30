@@ -21,12 +21,16 @@ package de.mschae23.grindenchantments.config.legacy.v3;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.config.DedicatedServerConfig;
 
 @Deprecated
 public record DedicatedServerConfigV3(boolean alternativeCostDisplay) {
     public static final Codec<DedicatedServerConfigV3> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("alternative_cost_display_enabled").forGetter(DedicatedServerConfigV3::alternativeCostDisplay)
     ).apply(instance, instance.stable(DedicatedServerConfigV3::new)));
-
     public static final DedicatedServerConfigV3 DEFAULT = new DedicatedServerConfigV3(false);
+
+    public DedicatedServerConfig latest() {
+        return new DedicatedServerConfig(this.alternativeCostDisplay);
+    }
 }

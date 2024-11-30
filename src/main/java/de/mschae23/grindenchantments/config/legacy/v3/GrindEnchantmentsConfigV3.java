@@ -22,8 +22,10 @@ package de.mschae23.grindenchantments.config.legacy.v3;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
+import de.mschae23.grindenchantments.config.ClientConfig;
 import de.mschae23.grindenchantments.config.DisenchantConfig;
 import de.mschae23.grindenchantments.config.MoveConfig;
+import de.mschae23.grindenchantments.config.ServerConfig;
 
 @SuppressWarnings("DeprecatedIsStillUsed")
 @Deprecated
@@ -57,5 +59,14 @@ public record GrindEnchantmentsConfigV3(DisenchantConfig disenchant, MoveConfig 
     @Override
     public boolean shouldUpdate() {
         return true;
+    }
+
+    public ServerConfig toServerConfig() {
+        return new ServerConfig(this.disenchant, this.move, this.resetRepairCost.latest(), this.filter.latest(),
+            this.dedicatedServerConfig.latest());
+    }
+
+    public ClientConfig toClientConfig() {
+        return new ClientConfig(this.clientConfig.showLevelCost(), true);
     }
 }
