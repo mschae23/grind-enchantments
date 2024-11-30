@@ -32,7 +32,7 @@ import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.config.ResetRepairCostConfig;
-import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.ServerConfig;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +40,9 @@ import org.jetbrains.annotations.NotNull;
 public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, GrindstoneEvents.UpdateResult, GrindstoneEvents.CanTakeResult, GrindstoneEvents.TakeResult, GrindstoneEvents.LevelCost {
     @Override
     public boolean canInsert(ItemStack stack, ItemStack other, int slotId) {
-        ResetRepairCostConfig config = GrindEnchantmentsMod.getConfig().resetRepairCost();
+        ResetRepairCostConfig config = GrindEnchantmentsMod.getServerConfig().resetRepairCost();
 
-        return config.enabled() && slotId == 1 && config.catalystItems().contains(stack.getRegistryEntry());
+        return config.enabled() && slotId == 1 && stack.getRegistryEntry().getKey().map(key -> config.catalystItems().contains(key.getValue())).orElse(false);
     }
 
     @Override
@@ -51,11 +51,11 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
             return ItemStack.EMPTY;
         }
 
-        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+        ServerConfig config = GrindEnchantmentsMod.getServerConfig();
         FilterConfig filter = config.filter();
 
         if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
-            && (filter.item().action() == FilterAction.DENY) == filter.item().items().contains(input1.getRegistryEntry())) {
+            && (filter.item().action() == FilterAction.DENY) == input1.getRegistryEntry().getKey().map(key -> filter.item().items().contains(key.getValue())).orElse(false)) {
             return ItemStack.EMPTY;
         }
 
@@ -74,7 +74,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isResetRepairCostOperation(input1, input2)) {
-            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+            ServerConfig config = GrindEnchantmentsMod.getServerConfig();
 
             return canTakeResult(input1, input2, () ->
                 GrindEnchantments.getLevelCost(input1, config.resetRepairCost().costFunction(), config.filter(), wrapperLookup), player);
@@ -89,7 +89,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
             return false;
         }
 
-        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+        ServerConfig config = GrindEnchantmentsMod.getServerConfig();
         FilterConfig filter = config.filter();
 
         input.setStack(0, ItemStack.EMPTY);
@@ -113,7 +113,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isResetRepairCostOperation(input1, input2)) {
-            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+            ServerConfig config = GrindEnchantmentsMod.getServerConfig();
 
             return GrindEnchantments.getLevelCost(input1, config.resetRepairCost().costFunction(), config.filter(), wrapperLookup);
         }
@@ -122,14 +122,14 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
     }
 
     public static boolean isResetRepairCostOperation(ItemStack input1, ItemStack input2) {
-        ResetRepairCostConfig config = GrindEnchantmentsMod.getConfig().resetRepairCost();
+        ResetRepairCostConfig config = GrindEnchantmentsMod.getServerConfig().resetRepairCost();
 
         if (!config.enabled())
             return false;
 
         return (input1.isDamageable() || EnchantmentHelper.canHaveEnchantments(input1))
             && !input2.isOf(Items.BOOK) && !input2.isOf(Items.ENCHANTED_BOOK) && !input2.isDamageable() && !input2.isOf(input1.getItem())
-            && config.catalystItems().contains(input2.getRegistryEntry());
+            && input2.getRegistryEntry().getKey().map(key -> config.catalystItems().contains(key.getValue())).orElse(false);
     }
 
     public static boolean canTakeResult(@SuppressWarnings("unused") ItemStack input1, @SuppressWarnings("unused") ItemStack input2,

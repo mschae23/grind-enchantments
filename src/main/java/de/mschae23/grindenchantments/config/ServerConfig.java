@@ -19,6 +19,7 @@
 
 package de.mschae23.grindenchantments.config;
 
+import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
@@ -54,5 +55,10 @@ public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRe
     @Override
     public boolean shouldUpdate() {
         return true;
+    }
+
+    public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
+        this.filter.validateRegistryEntries(wrapperLookup);
+        this.resetRepairCost.validateRegistryEntries(wrapperLookup);
     }
 }

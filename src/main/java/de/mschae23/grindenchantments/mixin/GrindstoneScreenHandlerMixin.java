@@ -32,7 +32,7 @@ import net.minecraft.world.WorldEvents;
 import com.llamalad7.mixinextras.sugar.Local;
 import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
-import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.ServerConfig;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,7 +79,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
     @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/GrindstoneScreenHandler;insertItem(Lnet/minecraft/item/ItemStack;IIZ)Z", ordinal = 0))
     private void onInsertResultItem(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, @Local(ordinal = 1) ItemStack itemStack2) {
-        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+        ServerConfig config = GrindEnchantmentsMod.getServerConfig();
 
         if (config.dedicatedServerConfig().alternativeCostDisplay()) {
             GrindEnchantments.removeLevelCostNbt(itemStack2);
@@ -132,7 +132,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler {
 
             boolean success = GrindstoneEvents.TAKE_RESULT.invoker().onTakeResult(input1, input2, stack, player, input, player.getRegistryManager());
 
-            if (GrindEnchantmentsMod.getConfig().dedicatedServerConfig().alternativeCostDisplay()) {
+            if (GrindEnchantmentsMod.getServerConfig().dedicatedServerConfig().alternativeCostDisplay()) {
                 GrindEnchantments.removeLevelCostNbt(stack);
             }
 

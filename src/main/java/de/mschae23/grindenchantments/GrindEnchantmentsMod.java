@@ -28,15 +28,13 @@ import java.util.Optional;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
@@ -56,7 +54,7 @@ import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import de.mschae23.grindenchantments.impl.DisenchantOperation;
 import de.mschae23.grindenchantments.impl.MoveOperation;
 import de.mschae23.grindenchantments.impl.ResetRepairCostOperation;
-import de.mschae23.grindenchantments.network.s2c.ServerConfigS2CPayload;
+import de.mschae23.grindenchantments.config.sync.ServerConfigS2CPayload;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
 import org.apache.logging.log4j.Level;
@@ -68,6 +66,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
     public static final Logger LOGGER = LogManager.getLogger("Grind Enchantments");
 
+    @Deprecated
     private static GrindEnchantmentsConfigV3 LEGACY_CONFIG = GrindEnchantmentsConfigV3.DEFAULT;
     @Nullable
     private static ServerConfig SERVER_CONFIG = null;
@@ -76,9 +75,11 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Singleplayer
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> readServerConfig(server.getRegistryManager())
-            .ifPresent(config -> SERVER_CONFIG = config));
+        // Singleplayer or on server
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            SERVER_CONFIG = readServerConfig(server.getRegistryManager()).orElse(ServerConfig.DEFAULT);
+            SERVER_CONFIG.validateRegistryEntries(server.getRegistryManager());
+        });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> SERVER_CONFIG = null);
 
         // Multiplayer
@@ -90,11 +91,19 @@ public class GrindEnchantmentsMod implements ModInitializer {
             ClientConfigurationNetworking.registerGlobalReceiver(ServerConfigS2CPayload.ID, (payload, context) -> {
                 //noinspection resource
                 context.client().execute(() -> {
+                    log(Level.INFO, "Received server config");
                     // TODO
                 });
             });
         });
+        ServerConfigurationConnectionEvents.CONFIGURE.register((handler, server) -> {
+            if (ServerConfigurationNetworking.canSend(handler, ServerConfigS2CPayload.ID)) {
+                log(Level.INFO, "Sent server config");
+                ServerConfigurationNetworking.send(handler, new ServerConfigS2CPayload());
+            }
+        });
 
+        //noinspection deprecation
         LEGACY_CONFIG = readLegacyConfig().orElse(GrindEnchantmentsConfigV3.DEFAULT);
 
         GrindEnchantmentsRegistries.init();

@@ -42,7 +42,7 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
 
     @Override
     protected void drawForeground(DrawContext context, int mouseX, int mouseY) {super.drawForeground(context, mouseX, mouseY);
-        if (!GrindEnchantmentsMod.getConfig().clientConfig().showLevelCost())
+        if (!GrindEnchantmentsMod.getClientConfig().showLevelCost())
             return; // Don't show the enchantment cost
 
         MinecraftClient client = Objects.requireNonNull(this.client);

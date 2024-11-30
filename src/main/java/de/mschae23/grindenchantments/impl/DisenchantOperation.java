@@ -33,7 +33,7 @@ import de.mschae23.grindenchantments.GrindEnchantments;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
-import de.mschae23.grindenchantments.config.legacy.v3.GrindEnchantmentsConfigV3;
+import de.mschae23.grindenchantments.config.ServerConfig;
 import de.mschae23.grindenchantments.event.ApplyLevelCostEvent;
 import de.mschae23.grindenchantments.event.GrindstoneEvents;
 import org.jetbrains.annotations.NotNull;
@@ -52,14 +52,14 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
 
         ItemStack enchantedItemStack = input1.hasEnchantments() ? input1 : input2;
 
-        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+        ServerConfig config = GrindEnchantmentsMod.getServerConfig();
         return transferEnchantmentsToBook(enchantedItemStack, config.filter());
     }
 
     @Override
     public boolean canTakeResult(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isDisenchantOperation(input1, input2)) {
-            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+            ServerConfig config = GrindEnchantmentsMod.getServerConfig();
 
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
@@ -77,7 +77,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
             return false;
         }
 
-        GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+        ServerConfig config = GrindEnchantmentsMod.getServerConfig();
 
         boolean stack1Book = input1.getItem() == Items.BOOK;
         ItemStack enchantedItemStack = stack1Book ? input2 : input1;
@@ -105,7 +105,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
     @Override
     public int getLevelCost(ItemStack input1, ItemStack input2, PlayerEntity player, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (isDisenchantOperation(input1, input2)) {
-            GrindEnchantmentsConfigV3 config = GrindEnchantmentsMod.getConfig();
+            ServerConfig config = GrindEnchantmentsMod.getServerConfig();
             boolean stack1Book = input1.getItem() == Items.BOOK;
             ItemStack enchantedItemStack = stack1Book ? input2 : input1;
 
@@ -121,7 +121,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
     }
 
     public static boolean isDisenchantOperation(ItemStack input1, ItemStack input2) {
-        if (!GrindEnchantmentsMod.getConfig().disenchant().enabled())
+        if (!GrindEnchantmentsMod.getServerConfig().disenchant().enabled())
             return false;
 
         return input1.hasEnchantments() && input2.getItem() == Items.BOOK
@@ -135,7 +135,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
 
     public static ItemStack transferEnchantmentsToBook(ItemStack source, FilterConfig filter) {
         if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
-            && (filter.item().action() == FilterAction.DENY) == filter.item().items().contains(source.getRegistryEntry())) {
+            && (filter.item().action() == FilterAction.DENY) == source.getRegistryEntry().getKey().map(key -> filter.item().items().contains(key.getValue())).orElse(false)) {
             return ItemStack.EMPTY;
         }
 

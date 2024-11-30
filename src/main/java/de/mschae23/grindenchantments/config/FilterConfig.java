@@ -19,16 +19,24 @@
 
 package de.mschae23.grindenchantments.config;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryCodecs;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.EnchantmentTags;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.dynamic.Codecs;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.GrindEnchantmentsMod;
+import org.apache.logging.log4j.Level;
 
 public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig enchantment, FilterAction curses) {
     public static final Codec<FilterConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -40,6 +48,26 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
     public static final FilterConfig DEFAULT = new FilterConfig(true, ItemConfig.DEFAULT, EnchantmentConfig.DEFAULT, FilterAction.IGNORE);
 
+    private boolean shouldDeny(ItemEnchantmentsComponent.Builder builder) {
+        if (this.curses == FilterAction.DENY) {
+            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
+                if (entry.isIn(EnchantmentTags.CURSE)) {
+                    return true;
+                }
+            }
+        }
+
+        if (this.enchantment.action == FilterAction.DENY) {
+            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
+                if (entry.getKey().map(key -> this.enchantment.enchantments.contains(key.getValue())).orElse(false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public ItemEnchantmentsComponent filter(ItemEnchantmentsComponent enchantments) {
         if (!this.enabled) {
             return enchantments;
@@ -47,25 +75,14 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchantments);
 
-        if (this.curses == FilterAction.DENY) {
-            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (entry.isIn(EnchantmentTags.CURSE)) {
-                    return ItemEnchantmentsComponent.DEFAULT;
-                }
-            }
-        }
-
-        if (this.enchantment.action == FilterAction.DENY) {
-            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (this.enchantment.enchantments.contains(entry)) {
-                    return ItemEnchantmentsComponent.DEFAULT;
-                }
-            }
+        if (this.shouldDeny(builder)) {
+            return ItemEnchantmentsComponent.DEFAULT;
         }
 
         builder.remove(enchantment ->
             ((this.curses == FilterAction.IGNORE) && enchantment.isIn(EnchantmentTags.CURSE))
-            || ((this.enchantment.action == FilterAction.IGNORE) == this.enchantment.enchantments.contains(enchantment)));
+            || ((this.enchantment.action == FilterAction.IGNORE) == enchantment.getKey().map(key ->
+                this.enchantment.enchantments.contains(key.getValue())).orElse(false)));
 
         return builder.build();
     }
@@ -77,44 +94,72 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchantments);
 
-        if (this.curses == FilterAction.DENY) {
-            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (entry.isIn(EnchantmentTags.CURSE)) {
-                    return ItemEnchantmentsComponent.DEFAULT;
-                }
-            }
-        }
-
-        if (this.enchantment.action == FilterAction.DENY) {
-            for (RegistryEntry<Enchantment> entry : builder.getEnchantments()) {
-                if (this.enchantment.enchantments.contains(entry)) {
-                    return ItemEnchantmentsComponent.DEFAULT;
-                }
-            }
+        if (this.shouldDeny(builder)) {
+            return ItemEnchantmentsComponent.DEFAULT;
         }
 
         builder.remove(enchantment ->
             ((this.curses == FilterAction.ALLOW) || !enchantment.isIn(EnchantmentTags.CURSE))
-            && ((this.enchantment.action == FilterAction.ALLOW) == this.enchantment.enchantments.contains(enchantment)));
+            && ((this.enchantment.action == FilterAction.ALLOW) == enchantment.getKey().map(key ->
+                this.enchantment.enchantments.contains(key.getValue())).orElse(false)));
 
         return builder.build();
     }
 
-    public record ItemConfig(RegistryEntryList<Item> items, FilterAction action) {
+    public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
+        this.item.validateRegistryEntries(wrapperLookup);
+        this.enchantment.validateRegistryEntries(wrapperLookup);
+    }
+
+    public record ItemConfig(List<Identifier> items, FilterAction action) {
         public static final Codec<ItemConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            RegistryCodecs.entryList(RegistryKeys.ITEM).fieldOf("enchantments").forGetter(ItemConfig::items),
+            Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
             FilterAction.NON_IGNORE_CODEC.fieldOf("action").forGetter(ItemConfig::action)
         ).apply(instance, instance.stable(ItemConfig::new)));
 
-        public static final ItemConfig DEFAULT = new ItemConfig(RegistryEntryList.empty(), FilterAction.DENY);
+        public static final ItemConfig DEFAULT = new ItemConfig(List.of(), FilterAction.DENY);
+
+        public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
+            Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ITEM);
+
+            if (registryWrapperOpt.isEmpty()) {
+                GrindEnchantmentsMod.log(Level.WARN, "Item registry is not present");
+                return;
+            }
+
+            RegistryWrapper.Impl<Item> registryWrapper = registryWrapperOpt.get();
+
+            this.items.stream()
+                .map(item -> Pair.of(item, registryWrapper.getOptional(RegistryKey.of(RegistryKeys.ITEM, item))))
+                .flatMap(result -> result.getSecond().isEmpty() ? Stream.of(result.getFirst()) : Stream.empty())
+                .map(Identifier::toString)
+                .forEach(item -> GrindEnchantmentsMod.log(Level.WARN, "Filter config contains unknown item: " + item));
+        }
     }
 
-    public record EnchantmentConfig(RegistryEntryList<Enchantment> enchantments, FilterAction action) {
+    public record EnchantmentConfig(List<Identifier> enchantments, FilterAction action) {
         public static final Codec<EnchantmentConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            RegistryCodecs.entryList(RegistryKeys.ENCHANTMENT).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
+                Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
             FilterAction.CODEC.fieldOf("action").forGetter(EnchantmentConfig::action)
         ).apply(instance, instance.stable(EnchantmentConfig::new)));
 
-        public static final EnchantmentConfig DEFAULT = new EnchantmentConfig(RegistryEntryList.empty(), FilterAction.IGNORE);
+        public static final EnchantmentConfig DEFAULT = new EnchantmentConfig(List.of(), FilterAction.IGNORE);
+
+        public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
+            Optional<? extends RegistryWrapper.Impl<Enchantment>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ENCHANTMENT);
+
+            if (registryWrapperOpt.isEmpty()) {
+                GrindEnchantmentsMod.log(Level.WARN, "Enchantment registry is not present");
+                return;
+            }
+
+            RegistryWrapper.Impl<Enchantment> registryWrapper = registryWrapperOpt.get();
+
+            this.enchantments.stream()
+                .map(enchantment -> Pair.of(enchantment, registryWrapper.getOptional(RegistryKey.of(RegistryKeys.ENCHANTMENT, enchantment))))
+                .flatMap(result -> result.getSecond().isEmpty() ? Stream.of(result.getFirst()) : Stream.empty())
+                .map(Identifier::toString)
+                .forEach(item -> GrindEnchantmentsMod.log(Level.WARN, "Filter config contains unknown enchantment: " + item));
+        }
     }
 }
