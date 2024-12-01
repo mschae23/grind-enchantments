@@ -21,6 +21,7 @@ package de.mschae23.grindenchantments.config.sync;
 
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
@@ -37,6 +38,11 @@ public record ServerConfigS2CPayload(ServerConfig config) implements CustomPaylo
     }
 
     public static PacketCodec<PacketByteBuf, ServerConfigS2CPayload> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
-        return ServerConfig.createPacketCodec(costFunctionCodec).xmap(ServerConfigS2CPayload::new, ServerConfigS2CPayload::config);
+        return PacketCodec.tuple(
+            // Version field for forward compatibility
+            PacketCodecs.BYTE, payload -> (byte) 1,
+            ServerConfig.createPacketCodec(costFunctionCodec), ServerConfigS2CPayload::config,
+            (version, config) -> new ServerConfigS2CPayload(config)
+        );
     }
 }
