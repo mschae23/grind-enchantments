@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.4-SNAPSHOT'
+    id 'fabric-loom' version '1.8-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -12,6 +12,10 @@ group = project.maven_group
 
 repositories {
     maven {
+        url = uri('https://mschae23.de/git/api/packages/mschae23/maven')
+    }
+
+    maven {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/mschae23/codec-config-api")
         credentials {
@@ -20,7 +24,18 @@ repositories {
         }
     }
 
-    maven { url 'https://jitpack.io' }
+    // Repositories for the dependencies of Tax Free Levels
+    maven { url "https://maven.shedaniel.me/" }
+    maven { url "https://maven.terraformersmc.com/releases" }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+
+    // maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -35,10 +50,10 @@ dependencies {
         "fabric-lifecycle-events-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    modCompileOnly "com.github.fourmisain:TaxFreeLevels:$project.tax_free_levels_version"
+    modCompileOnly "io.github.fourmisain:TaxFreeLevels-fabric:$project.tax_free_levels_version"
 
-    modImplementation "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
-    include "de.martenschaefer:codec-config-api:$project.codec_config_api_version"
+    modImplementation "de.mschae23:codec-config-api:$project.codec_config_api_version"
+    include "de.mschae23:codec-config-api:$project.codec_config_api_version"
 }
 
 loom {
@@ -66,7 +81,7 @@ java {
 }
 
 jar {
-    from("LICENSE") {
+    from("COPYING") {
         rename { "${it}_${project.archivesBaseName}" }
     }
 }
