@@ -39,7 +39,7 @@ public class GrindEnchantmentsClient implements ClientModInitializer {
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             CLIENT_CONFIG = GrindEnchantmentsMod.initializeClientConfig();
             GrindEnchantmentsMod.LOCAL_SERVER_CONFIG = GrindEnchantmentsMod.initializeServerConfig(RegistryWrapper.WrapperLookup.of(
-                Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION)));
+                Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION.getReadOnlyWrapper())));
 
             ClientConfigurationNetworking.registerGlobalReceiver(ServerConfigS2CPayload.ID, (payload, context) -> {
                 //noinspection resource

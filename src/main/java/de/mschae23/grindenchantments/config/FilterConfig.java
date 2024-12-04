@@ -34,10 +34,10 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.dynamic.Codecs;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.CodecUtils;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import org.apache.logging.log4j.Level;
 
@@ -54,7 +54,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
     public static PacketCodec<PacketByteBuf, FilterConfig> createPacketCodec() {
         return PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, FilterConfig::enabled,
+            PacketCodecs.BOOL, FilterConfig::enabled,
             ItemConfig.createPacketCodec(), FilterConfig::item,
             EnchantmentConfig.createPacketCodec(), FilterConfig::enchantment,
             FilterAction.PACKET_CODEC, FilterConfig::curses,
@@ -137,7 +137,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
     public record ItemConfig(List<Identifier> items, FilterAction action) {
         public static final Codec<ItemConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
+            CodecUtils.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
             FilterAction.NON_IGNORE_CODEC.fieldOf("action").forGetter(ItemConfig::action)
         ).apply(instance, instance.stable(ItemConfig::new)));
 
@@ -152,7 +152,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         }
 
         public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
-            Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ITEM);
+            Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptionalWrapper(RegistryKeys.ITEM);
 
             if (registryWrapperOpt.isEmpty()) {
                 GrindEnchantmentsMod.log(Level.WARN, "Item registry is not present");
@@ -179,7 +179,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
 
     public record EnchantmentConfig(List<Identifier> enchantments, FilterAction action) {
         public static final Codec<EnchantmentConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
+                CodecUtils.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
             FilterAction.CODEC.fieldOf("action").forGetter(EnchantmentConfig::action)
         ).apply(instance, instance.stable(EnchantmentConfig::new)));
 
@@ -194,7 +194,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         }
 
         public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
-            Optional<? extends RegistryWrapper.Impl<Enchantment>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ENCHANTMENT);
+            Optional<? extends RegistryWrapper.Impl<Enchantment>> registryWrapperOpt = wrapperLookup.getOptionalWrapper(RegistryKeys.ENCHANTMENT);
 
             if (registryWrapperOpt.isEmpty()) {
                 GrindEnchantmentsMod.log(Level.WARN, "Enchantment registry is not present");

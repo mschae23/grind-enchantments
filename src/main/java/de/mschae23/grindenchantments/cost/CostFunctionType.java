@@ -47,7 +47,7 @@ public interface CostFunctionType<M extends CostFunction> {
 
     static PacketCodec<ByteBuf, CostFunctionType<?>> createPacketCodec() {
         return RegistryKey.createPacketCodec(GrindEnchantmentsRegistries.COST_FUNCTION_KEY).xmap(
-            key -> GrindEnchantmentsRegistries.COST_FUNCTION.getOptionalValue(key).orElseThrow(
+            key -> GrindEnchantmentsRegistries.COST_FUNCTION.getOrEmpty(key).orElseThrow(
                 () -> new IllegalStateException("Can't decode '" + key.getValue() + "', unregistered value")),
             type -> GrindEnchantmentsRegistries.COST_FUNCTION.getKey(type).orElseThrow(
                 () -> new IllegalStateException("Can't encode '" + type + "', unregistered value"))

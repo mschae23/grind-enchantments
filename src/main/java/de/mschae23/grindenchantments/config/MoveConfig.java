@@ -45,7 +45,7 @@ public record MoveConfig(boolean enabled, CostFunction costFunction) {
 
     public static PacketCodec<PacketByteBuf, MoveConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
         return PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, MoveConfig::enabled,
+            PacketCodecs.BOOL, MoveConfig::enabled,
             costFunctionCodec, MoveConfig::costFunction,
             MoveConfig::new
         );

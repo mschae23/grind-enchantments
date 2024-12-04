@@ -30,7 +30,7 @@ public record DedicatedServerConfig(boolean alternativeCostDisplay) {
         Codec.BOOL.fieldOf("alternative_cost_display_enabled").forGetter(DedicatedServerConfig::alternativeCostDisplay)
     ).apply(instance, instance.stable(DedicatedServerConfig::new)));
 
-    public static final PacketCodec<PacketByteBuf, DedicatedServerConfig> PACKET_CODEC = PacketCodecs.BOOLEAN.xmap(
+    public static final PacketCodec<PacketByteBuf, DedicatedServerConfig> PACKET_CODEC = PacketCodecs.BOOL.xmap(
         DedicatedServerConfig::new, DedicatedServerConfig::alternativeCostDisplay).cast();
 
     public static final DedicatedServerConfig DEFAULT = new DedicatedServerConfig(false);

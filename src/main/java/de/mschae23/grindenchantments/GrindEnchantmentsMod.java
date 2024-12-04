@@ -210,7 +210,8 @@ public class GrindEnchantmentsMod implements ModInitializer {
         final Path newConfigDirPath = FabricLoader.getInstance().getConfigDir().resolve(MODID);
 
         if (!Files.isDirectory(newConfigDirPath)) {
-            RegistryWrapper.WrapperLookup wrapperLookup = RegistryWrapper.WrapperLookup.of(Stream.of(GrindEnchantmentsRegistries.COST_FUNCTION));
+            RegistryWrapper.WrapperLookup wrapperLookup = RegistryWrapper.WrapperLookup.of(Stream.of(
+                GrindEnchantmentsRegistries.COST_FUNCTION.getReadOnlyWrapper()));
             Optional<GrindEnchantmentsConfigV3> legacyConfigOpt = readLegacyConfig(wrapperLookup);
 
             if (legacyConfigOpt.isPresent()) {

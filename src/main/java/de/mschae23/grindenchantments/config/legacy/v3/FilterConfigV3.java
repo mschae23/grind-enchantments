@@ -21,9 +21,9 @@ package de.mschae23.grindenchantments.config.legacy.v3;
 
 import java.util.List;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.dynamic.Codecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.CodecUtils;
 import de.mschae23.grindenchantments.config.FilterAction;
 import de.mschae23.grindenchantments.config.FilterConfig;
 
@@ -45,7 +45,7 @@ public record FilterConfigV3(boolean enabled, ItemConfig item, EnchantmentConfig
 
     public record ItemConfig(List<Identifier> items, FilterAction action) {
         public static final Codec<ItemConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
+            CodecUtils.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(ItemConfig::items),
             FilterAction.NON_IGNORE_CODEC.fieldOf("action").forGetter(ItemConfig::action)
         ).apply(instance, instance.stable(ItemConfig::new)));
 
@@ -54,7 +54,7 @@ public record FilterConfigV3(boolean enabled, ItemConfig item, EnchantmentConfig
 
     public record EnchantmentConfig(List<Identifier> enchantments, FilterAction action) {
         public static final Codec<EnchantmentConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codecs.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
+            CodecUtils.listOrSingle(Identifier.CODEC).fieldOf("enchantments").forGetter(EnchantmentConfig::enchantments),
             FilterAction.CODEC.fieldOf("action").forGetter(EnchantmentConfig::action)
         ).apply(instance, instance.stable(EnchantmentConfig::new)));
 

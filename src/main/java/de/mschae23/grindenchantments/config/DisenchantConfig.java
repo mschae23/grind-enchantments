@@ -45,8 +45,8 @@ public record DisenchantConfig(boolean enabled, boolean consumeItem, CostFunctio
 
     public static PacketCodec<PacketByteBuf, DisenchantConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
         return PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, DisenchantConfig::enabled,
-            PacketCodecs.BOOLEAN, DisenchantConfig::consumeItem,
+            PacketCodecs.BOOL, DisenchantConfig::enabled,
+            PacketCodecs.BOOL, DisenchantConfig::consumeItem,
             costFunctionCodec, DisenchantConfig::costFunction,
             DisenchantConfig::new
         );

@@ -1,10 +1,7 @@
 plugins {
-    id 'fabric-loom' version '1.8-SNAPSHOT'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'maven-publish'
 }
-
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
 
 version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
@@ -16,15 +13,6 @@ base {
 repositories {
     maven {
         url = uri('https://mschae23.de/git/api/packages/mschae23/maven')
-    }
-
-    maven {
-        name = 'GitHubPackages'
-        url = uri('https://maven.pkg.github.com/mschae23/codec-config-api')
-        credentials {
-            username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_USERNAME')
-            password = project.findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
-        }
     }
 
     // Repositories for the dependencies of Tax Free Levels
@@ -80,7 +68,6 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
     it.options.release = 21
 }
 

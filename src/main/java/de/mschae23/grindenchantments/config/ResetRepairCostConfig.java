@@ -30,10 +30,10 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.dynamic.Codecs;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.mschae23.grindenchantments.CodecUtils;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.cost.AverageCountCostFunction;
 import de.mschae23.grindenchantments.cost.CostFunction;
@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Level;
 public record ResetRepairCostConfig(boolean enabled, List<Identifier> catalystItems, boolean requiresEnchantment, CostFunction costFunction) {
     public static final Codec<ResetRepairCostConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.BOOL.fieldOf("enabled").forGetter(ResetRepairCostConfig::enabled),
-        Codecs.listOrSingle(Identifier.CODEC).fieldOf("catalyst_items").forGetter(ResetRepairCostConfig::catalystItems),
+        CodecUtils.listOrSingle(Identifier.CODEC).fieldOf("catalyst_items").forGetter(ResetRepairCostConfig::catalystItems),
         Codec.BOOL.fieldOf("requires_enchantment").forGetter(ResetRepairCostConfig::requiresEnchantment),
         CostFunction.CODEC.fieldOf("cost_function").forGetter(ResetRepairCostConfig::costFunction)
     ).apply(instance, instance.stable(ResetRepairCostConfig::new)));
@@ -60,16 +60,16 @@ public record ResetRepairCostConfig(boolean enabled, List<Identifier> catalystIt
 
     public static PacketCodec<PacketByteBuf, ResetRepairCostConfig> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
         return PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, ResetRepairCostConfig::enabled,
+            PacketCodecs.BOOL, ResetRepairCostConfig::enabled,
             Identifier.PACKET_CODEC.collect(PacketCodecs.toList()), ResetRepairCostConfig::catalystItems,
-            PacketCodecs.BOOLEAN, ResetRepairCostConfig::requiresEnchantment,
+            PacketCodecs.BOOL, ResetRepairCostConfig::requiresEnchantment,
             costFunctionCodec, ResetRepairCostConfig::costFunction,
             ResetRepairCostConfig::new
         );
     }
 
     public void validateRegistryEntries(RegistryWrapper.WrapperLookup wrapperLookup) {
-        Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptional(RegistryKeys.ITEM);
+        Optional<? extends RegistryWrapper.Impl<Item>> registryWrapperOpt = wrapperLookup.getOptionalWrapper(RegistryKeys.ITEM);
 
         if (registryWrapperOpt.isEmpty()) {
             GrindEnchantmentsMod.log(Level.WARN, "Item registry is not present");
