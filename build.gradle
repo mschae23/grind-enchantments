@@ -1,3 +1,6 @@
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 plugins {
     id 'fabric-loom' version '1.10-SNAPSHOT'
     id 'maven-publish'
@@ -14,7 +17,7 @@ repositories {
     mavenLocal()
 
     maven {
-        url = uri('https://mschae23.de/git/api/packages/mschae23/maven')
+        url = uri('https://code.mschae23.de/api/packages/mschae23/maven')
     }
 
     maven {
@@ -105,11 +108,19 @@ publishing {
     repositories {
         maven {
             name = "Forgejo"
-            url = uri("https://mschae23.de/git/api/packages/mschae23/maven")
+            url = uri("https://code.mschae23.de/api/packages/mschae23/maven")
 
             credentials(HttpHeaderCredentials) {
+                final token = java.util.Optional.ofNullable(System.getenv("XDG_CONFIG_HOME")).map { java.nio.file.Path.of(it).resolve("packages") }.or {
+                    java.util.Optional.ofNullable(System.getenv("HOME")).map { java.nio.file.Path.of(it).resolve(".config/packages") }}.or {
+                    java.util.Optional.ofNullable(System.getenv("HOMEDRIVE")).flatMap { drive -> java.util.Optional.ofNullable(System.getenv("HOMEPATH"))
+                        .map { drive + it }}.map { java.nio.file.Path.of(it).resolve(".packages") }}.map {
+                    it.resolve("mschae23-forgejo.token") }.filter { Files.exists(it) }.map {
+                    Files.readString(it, StandardCharsets.UTF_8)
+                }.orElse("")
+
                 name = "Authorization"
-                value = "token ${System.getenv("FORGEJO_PACKAGES_TOKEN")}"
+                value = "token $token"
             }
 
             authentication {

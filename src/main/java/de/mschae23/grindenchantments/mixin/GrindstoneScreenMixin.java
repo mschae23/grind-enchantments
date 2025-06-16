@@ -41,7 +41,9 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
     }
 
     @Override
-    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {super.drawForeground(context, mouseX, mouseY);
+    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+        super.drawForeground(context, mouseX, mouseY);
+
         if (!GrindEnchantmentsMod.getClientConfig().showLevelCost())
             return; // Don't show the enchantment cost
 
@@ -54,7 +56,7 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
             player, registryManager);
 
         if (cost > 0) {
-            int j = 8453920;
+            int j = -8323296;
             Text text;
 
             if (!this.handler.getSlot(2).hasStack()) {
@@ -62,7 +64,7 @@ public abstract class GrindstoneScreenMixin extends HandledScreen<GrindstoneScre
             } else {
                 text = Text.translatable("container.repair.cost", cost);
                 if (!this.handler.getSlot(2).canTakeItems(this.client.player)) {
-                    j = 16736352;
+                    j = -40864;
                 }
             }
 
