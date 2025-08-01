@@ -1,8 +1,5 @@
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -64,7 +61,7 @@ dependencies {
 
 loom {
     accessWidenerPath = file 'src/main/resources/grindenchantments.accesswidener'
-    
+
     decompilers {
         vineflower {
             options.put("ind", "    ")
@@ -100,7 +97,8 @@ jar {
 // configure the maven publication
 publishing {
     publications {
-        mod(MavenPublication) {
+        create("mod", MavenPublication) {
+            artifactId = project.archives_base_name
             from components.java
         }
     }
@@ -115,8 +113,8 @@ publishing {
                     java.util.Optional.ofNullable(System.getenv("HOME")).map { java.nio.file.Path.of(it).resolve(".config/packages") }}.or {
                     java.util.Optional.ofNullable(System.getenv("HOMEDRIVE")).flatMap { drive -> java.util.Optional.ofNullable(System.getenv("HOMEPATH"))
                         .map { drive + it }}.map { java.nio.file.Path.of(it).resolve(".packages") }}.map {
-                    it.resolve("mschae23-forgejo.token") }.filter { Files.exists(it) }.map {
-                    Files.readString(it, StandardCharsets.UTF_8)
+                    it.resolve("mschae23-forgejo.token") }.filter { java.nio.file.Files.exists(it) }.map {
+                    java.nio.file.Files.readString(it, java.nio.charset.StandardCharsets.UTF_8)
                 }.orElse("")
 
                 name = "Authorization"
