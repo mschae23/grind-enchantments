@@ -17,15 +17,6 @@ repositories {
         url = uri('https://code.mschae23.de/api/packages/mschae23/maven')
     }
 
-    maven {
-        name = 'GitHubPackages'
-        url = uri('https://maven.pkg.github.com/mschae23/codec-config-api')
-        credentials {
-            username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_USERNAME')
-            password = project.findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
-        }
-    }
-
     // Repositories for the dependencies of Tax Free Levels
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/releases" }
