@@ -14,7 +14,7 @@ repositories {
     mavenLocal()
 
     maven {
-        url = uri('https://code.mschae23.de/api/packages/mschae23/maven')
+        url = uri('https://pkg.mschae23.de/maven')
     }
 
     // Repositories for the dependencies of Tax Free Levels
@@ -97,7 +97,7 @@ publishing {
     repositories {
         maven {
             name = "Forgejo"
-            url = uri("https://code.mschae23.de/api/packages/mschae23/maven")
+            url = uri("https://pkg.mschae23.de/maven")
 
             credentials(HttpHeaderCredentials) {
                 final token = java.util.Optional.ofNullable(System.getenv("XDG_CONFIG_HOME")).map { java.nio.file.Path.of(it).resolve("packages") }.or {
