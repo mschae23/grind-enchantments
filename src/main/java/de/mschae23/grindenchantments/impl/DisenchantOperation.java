@@ -53,7 +53,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
         ItemStack enchantedItemStack = input1.hasEnchantments() ? input1 : input2;
 
         ServerConfig config = GrindEnchantmentsMod.getServerConfig();
-        return transferEnchantmentsToBook(enchantedItemStack, config.filter());
+        return transferEnchantmentsToBook(enchantedItemStack, config.filter(), wrapperLookup);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
         }
 
         input.setStack(stack1Book ? 1 : 0, config.disenchant().consumeItem() ?
-            ItemStack.EMPTY : grind(enchantedItemStack, config.filter()));
+            ItemStack.EMPTY : grind(enchantedItemStack, config.filter(), wrapperLookup));
 
         if (bookItemStack.getCount() == 1)
             input.setStack(stack1Book ? 0 : 1, ItemStack.EMPTY);
@@ -133,20 +133,20 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
         return player.getAbilities().creativeMode || player.experienceLevel >= cost.getAsInt();
     }
 
-    public static ItemStack transferEnchantmentsToBook(ItemStack source, FilterConfig filter) {
+    public static ItemStack transferEnchantmentsToBook(ItemStack source, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (filter.enabled() && filter.item().action() != FilterAction.IGNORE
             && (filter.item().action() == FilterAction.DENY) == source.getRegistryEntry().getKey().map(key -> filter.item().items().contains(key.getValue())).orElse(false)) {
             return ItemStack.EMPTY;
         }
 
-        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(source, filter);
+        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(source, filter, GrindEnchantmentsMod.getServerConfig().disenchant().onlyTakeFirst(), wrapperLookup);
 
         if (enchantments.isEmpty())
             return ItemStack.EMPTY;
 
         int repairCost = 0;
 
-        for(int i = 0; i < enchantments.getSize(); i++) {
+        for (int i = 0; i < enchantments.getSize(); i++) {
             repairCost = AnvilScreenHandler.getNextCost(repairCost);
         }
 
@@ -156,10 +156,10 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
         return book;
     }
 
-    private static ItemStack grind(ItemStack stack, FilterConfig filter) {
+    private static ItemStack grind(ItemStack stack, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
         ItemStack stack2 = stack.copy();
         ItemEnchantmentsComponent enchantments = filter.filterReversed(stack2.getOrDefault(EnchantmentHelper.getEnchantmentsComponentType(stack2),
-            ItemEnchantmentsComponent.DEFAULT));
+            ItemEnchantmentsComponent.DEFAULT), GrindEnchantmentsMod.getServerConfig().disenchant().onlyTakeFirst(), wrapperLookup);
         stack2.set(EnchantmentHelper.getEnchantmentsComponentType(stack2), enchantments);
 
         if (stack2.isOf(Items.ENCHANTED_BOOK) && enchantments.isEmpty()) {

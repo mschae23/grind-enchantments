@@ -24,16 +24,20 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import de.mschae23.grindenchantments.config.DedicatedServerConfig;
 import de.mschae23.grindenchantments.config.FilterConfig;
 import de.mschae23.grindenchantments.cost.CostFunction;
+import de.mschae23.grindenchantments.impl.MoveOperation;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 public class GrindEnchantments {
     public static int getLevelCost(ItemStack stack, CostFunction costFunction, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
@@ -43,8 +47,22 @@ public class GrindEnchantments {
         return (int) Math.ceil(cost);
     }
 
-    public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, FilterConfig filter) {
-        return filter.filter(EnchantmentHelper.getEnchantments(stack));
+    public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, FilterConfig filter, boolean onlyTakeFirst, RegistryWrapper.WrapperLookup wrapperLookup) {
+        ItemEnchantmentsComponent enchantments = filter.filter(EnchantmentHelper.getEnchantments(stack));
+
+        if (onlyTakeFirst) {
+            ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = MoveOperation.getFirstEnchantment(enchantments, false, wrapperLookup);
+
+            if (firstEnchantment == null) {
+                return ItemEnchantmentsComponent.DEFAULT;
+            } else {
+                ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
+                builder.add(firstEnchantment.left(), firstEnchantment.rightInt());
+                return builder.build();
+            }
+        } else {
+            return enchantments;
+        }
     }
 
     public static ItemStack addLevelCostComponent(ItemStack stack, IntSupplier cost, boolean canTakeItem, DedicatedServerConfig config) {

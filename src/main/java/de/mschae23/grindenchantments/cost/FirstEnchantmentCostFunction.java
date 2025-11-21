@@ -39,7 +39,7 @@ public record FirstEnchantmentCostFunction(CostFunction function) implements Cos
 
     @Override
     public double getCost(ItemEnchantmentsComponent enchantments, FilterConfig filter, RegistryWrapper.WrapperLookup wrapperLookup) {
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = MoveOperation.getFirstEnchantment(enchantments, wrapperLookup);
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = MoveOperation.getFirstEnchantment(enchantments, false, wrapperLookup);
 
         if (firstEnchantment == null) {
             return 1.0;

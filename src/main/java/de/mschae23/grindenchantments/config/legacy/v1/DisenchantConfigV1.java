@@ -32,6 +32,6 @@ public record DisenchantConfigV1(boolean enabled, boolean consumeItem, CostConfi
     ).apply(instance, instance.stable(DisenchantConfigV1::new)));
 
     public DisenchantConfig latest() {
-        return new DisenchantConfig(this.enabled, this.consumeItem, this.costConfig.latest());
+        return new DisenchantConfig(this.enabled, this.consumeItem, false, this.costConfig.latest());
     }
 }

@@ -32,6 +32,7 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.Codecs;
@@ -39,7 +40,12 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.grindenchantments.GrindEnchantmentsMod;
+import de.mschae23.grindenchantments.impl.MoveOperation;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig enchantment, FilterAction curses) {
     public static final Codec<FilterConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -101,7 +107,7 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
         return builder.build();
     }
 
-    public ItemEnchantmentsComponent filterReversed(ItemEnchantmentsComponent enchantments) {
+    public ItemEnchantmentsComponent filterReversed(ItemEnchantmentsComponent enchantments, boolean onlyRemoveFirst, RegistryWrapper.WrapperLookup wrapperLookup) {
         if (!this.enabled) {
             return ItemEnchantmentsComponent.DEFAULT;
         }
@@ -112,10 +118,15 @@ public record FilterConfig(boolean enabled, ItemConfig item, EnchantmentConfig e
             return ItemEnchantmentsComponent.DEFAULT;
         }
 
+        ItemEnchantmentsComponent normalOrderFilteredEnchantments = onlyRemoveFirst ? filter(enchantments) : null;
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = onlyRemoveFirst ? MoveOperation.getFirstEnchantment(normalOrderFilteredEnchantments, false, wrapperLookup) : null;
+
         builder.remove(enchantment ->
             ((this.curses == FilterAction.ALLOW) || !enchantment.isIn(EnchantmentTags.CURSE))
             && ((this.enchantment.action == FilterAction.ALLOW) == enchantment.getKey().map(key ->
-                this.enchantment.enchantments.contains(key.getValue())).orElse(false)));
+                this.enchantment.enchantments.contains(key.getValue())).orElse(false))
+            && (!onlyRemoveFirst || enchantment.getKey().flatMap(key -> firstEnchantment.left().getKey().map(firstEnchantmentKey ->
+                key.getValue().equals(firstEnchantmentKey.getValue()))).orElse(false)));
 
         return builder.build();
     }

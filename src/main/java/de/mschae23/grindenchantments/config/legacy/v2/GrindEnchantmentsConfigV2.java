@@ -59,7 +59,7 @@ public record GrindEnchantmentsConfigV2(DisenchantConfig disenchant, MoveConfig 
     @Override
     public GrindEnchantmentsConfigV3 latest() {
         return new GrindEnchantmentsConfigV3(
-            new DisenchantConfig(this.disenchant.enabled(), this.disenchant.consumeItem(),
+            new DisenchantConfig(this.disenchant.enabled(), this.disenchant.consumeItem(), false,
                 new FilterCostFunction(this.disenchant.costFunction())),
             new MoveConfig(this.move.enabled(),
                 new FilterCostFunction(this.move.costFunction())),

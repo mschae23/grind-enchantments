@@ -40,7 +40,7 @@ public record ServerConfigS2CPayload(ServerConfig config) implements CustomPaylo
     public static PacketCodec<PacketByteBuf, ServerConfigS2CPayload> createPacketCodec(PacketCodec<PacketByteBuf, CostFunction> costFunctionCodec) {
         return PacketCodec.tuple(
             // Version field for forward compatibility
-            PacketCodecs.BYTE, payload -> (byte) 1,
+            PacketCodecs.BYTE, payload -> (byte) 2,
             ServerConfig.createPacketCodec(costFunctionCodec), ServerConfigS2CPayload::config,
             (version, config) -> new ServerConfigS2CPayload(config)
         );

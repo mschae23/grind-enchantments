@@ -65,8 +65,8 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
             return ItemStack.EMPTY;
         }
 
-        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(input1, filter);
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(enchantments, wrapperLookup);
+        ItemEnchantmentsComponent enchantments = GrindEnchantments.getEnchantments(input1, filter, false, wrapperLookup);
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(enchantments, true, wrapperLookup);
 
         if (firstEnchantment == null) {
             return ItemStack.EMPTY;
@@ -125,7 +125,7 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
         FilterConfig filter = config.filter();
 
         ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(input1);
-        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(filter.filter(enchantments), wrapperLookup);
+        ObjectIntPair<RegistryEntry<Enchantment>> firstEnchantment = getFirstEnchantment(filter.filter(enchantments), true, wrapperLookup);
 
         if (firstEnchantment == null) {
             return false;
@@ -182,8 +182,8 @@ public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEven
     }
 
     @Nullable
-    public static ObjectIntPair<RegistryEntry<Enchantment>> getFirstEnchantment(ItemEnchantmentsComponent enchantments, RegistryWrapper.WrapperLookup wrapperLookup) {
-        if (enchantments.getSize() < 2) {
+    public static ObjectIntPair<RegistryEntry<Enchantment>> getFirstEnchantment(ItemEnchantmentsComponent enchantments, boolean requireTwo, RegistryWrapper.WrapperLookup wrapperLookup) {
+        if (requireTwo && enchantments.getSize() < 2) {
             return null;
         }
 
