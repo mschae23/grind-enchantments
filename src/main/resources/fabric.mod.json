@@ -9,12 +9,12 @@
     "mschae23"
   ],
   "contact": {
-    "homepage": "https://legacy.curseforge.com/minecraft/mc-mods/grind-enchantments",
-    "sources": "https://github.com/mschae23/grind-enchantments",
+    "homepage": "https://docs.mschae23.de/Grind_enchantments",
+    "sources": "https://code.mschae23.de/mschae23/grind-enchantments",
     "issues": "https://github.com/mschae23/grind-enchantments/issues"
   },
 
-  "license": "LGPL-3.0-or-later",
+  "license": "GPL-3.0-or-later",
   "icon": "assets/grindenchantments/icon.png",
 
   "environment": "*",

@@ -10,4 +10,3 @@ pluginManagement {
 }
 
 rootProject.name = 'grind-enchantments'
-include 'codec-config-api'
