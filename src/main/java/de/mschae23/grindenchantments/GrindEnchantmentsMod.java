@@ -30,15 +30,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.stream.Stream;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.util.Identifier;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
-import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
@@ -61,10 +56,15 @@ import de.mschae23.grindenchantments.impl.MoveOperation;
 import de.mschae23.grindenchantments.impl.ResetRepairCostOperation;
 import de.mschae23.grindenchantments.registry.GrindEnchantmentsRegistries;
 import io.github.fourmisain.taxfreelevels.TaxFreeLevels;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.util.Identifier;
 
 public class GrindEnchantmentsMod implements ModInitializer {
     public static final String MODID = "grindenchantments";
@@ -90,7 +90,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> SERVER_CONFIG = null);
 
         // Multiplayer
-        PayloadTypeRegistry.configurationS2C().register(ServerConfigS2CPayload.ID,
+        PayloadTypeRegistry.clientboundConfiguration().register(ServerConfigS2CPayload.ID,
             ServerConfigS2CPayload.createPacketCodec(CostFunction.createPacketCodec()));
 
         ServerConfigurationConnectionEvents.CONFIGURE.register((handler, server) -> {
@@ -129,18 +129,6 @@ public class GrindEnchantmentsMod implements ModInitializer {
 
     public static ClientConfig getClientConfig() {
         return GrindEnchantmentsClient.getClientConfig();
-    }
-
-    public static <C extends ModConfig<C>> ModConfig.Type<C, ? extends ModConfig<C>> getConfigType(ModConfig.Type<C, ? extends ModConfig<C>>[] versions, int version) {
-        for (int i = versions.length - 1; i >= 0; i--) {
-            ModConfig.Type<C, ? extends ModConfig<C>> v = versions[i];
-
-            if (version == v.version()) {
-                return v;
-            }
-        }
-
-        return versions[versions.length - 1];
     }
 
     private static <C extends ModConfig<C>> C initializeGenericConfig(Path configName, C latestDefault, Codec<ModConfig<C>> codec,
@@ -267,7 +255,7 @@ public class GrindEnchantmentsMod implements ModInitializer {
         };
 
         final Codec<ModConfig<GrindEnchantmentsConfigV3>> legacyConfigCodec = ModConfig.createCodec(legacyLatestConfigVersion, version ->
-            getConfigType(legacyConfigCodecs, version));
+            ModConfig.getType(legacyConfigCodecs, version));
 
         Path configPath = FabricLoader.getInstance().getConfigDir().resolve(Paths.get(MODID + ".json"));
         @Nullable

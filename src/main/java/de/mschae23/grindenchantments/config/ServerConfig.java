@@ -26,7 +26,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
-import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 import de.mschae23.grindenchantments.cost.CostFunction;
 
 public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRepairCostConfig resetRepairCost,
@@ -44,7 +43,7 @@ public record ServerConfig(DisenchantConfig disenchant, MoveConfig move, ResetRe
     @SuppressWarnings("unchecked")
     public static final ModConfig.Type<ServerConfig, ? extends ModConfig<ServerConfig>>[] VERSIONS = new ModConfig.Type[] { TYPE, };
     public static final Codec<ModConfig<ServerConfig>> CODEC = ModConfig.createCodec(TYPE.version(), version ->
-        GrindEnchantmentsMod.getConfigType(VERSIONS, version));
+        ModConfig.getType(VERSIONS, version));
 
     public static final ServerConfig DEFAULT = new ServerConfig(DisenchantConfig.DEFAULT, MoveConfig.DEFAULT,
         ResetRepairCostConfig.DEFAULT, FilterConfig.DEFAULT, DedicatedServerConfig.DEFAULT);

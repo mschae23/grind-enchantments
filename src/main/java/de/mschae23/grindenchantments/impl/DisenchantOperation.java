@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 public class DisenchantOperation implements GrindstoneEvents.CanInsert, GrindstoneEvents.UpdateResult, GrindstoneEvents.CanTakeResult, GrindstoneEvents.TakeResult, GrindstoneEvents.LevelCost {
     @Override
     public boolean canInsert(ItemStack stack, ItemStack other, int slotId) {
-        return stack.getItem() == Items.BOOK && !other.isOf(Items.BOOK);
+        return stack.getItem() == Items.BOOK && !other.is(Items.BOOK);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class DisenchantOperation implements GrindstoneEvents.CanInsert, Grindsto
             ItemEnchantmentsComponent.DEFAULT), GrindEnchantmentsMod.getServerConfig().disenchant().onlyTakeFirst(), wrapperLookup);
         stack2.set(EnchantmentHelper.getEnchantmentsComponentType(stack2), enchantments);
 
-        if (stack2.isOf(Items.ENCHANTED_BOOK) && enchantments.isEmpty()) {
+        if (stack2.is(Items.ENCHANTED_BOOK) && enchantments.isEmpty()) {
             stack2 = stack2.copyComponentsToNewStack(Items.BOOK, stack2.getCount());
         }
 

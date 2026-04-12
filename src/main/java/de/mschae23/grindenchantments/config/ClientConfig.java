@@ -23,7 +23,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
-import de.mschae23.grindenchantments.GrindEnchantmentsMod;
 
 public record ClientConfig(boolean showLevelCost, ClientSyncConfig sync) implements ModConfig<ClientConfig> {
     public static final MapCodec<ClientConfig> TYPE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -37,7 +36,7 @@ public record ClientConfig(boolean showLevelCost, ClientSyncConfig sync) impleme
     public static final ModConfig.Type<ClientConfig, ? extends ModConfig<ClientConfig>>[] VERSIONS = new ModConfig.Type[] { TYPE, };
 
     public static final Codec<ModConfig<ClientConfig>> CODEC = ModConfig.createCodec(TYPE.version(), version ->
-        GrindEnchantmentsMod.getConfigType(VERSIONS, version));
+        ModConfig.getType(VERSIONS, version));
 
     @Override
     public Type<ClientConfig, ?> type() {

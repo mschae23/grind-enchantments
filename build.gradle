@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -15,6 +15,10 @@ repositories {
 
     maven {
         url = uri('https://pkg.mschae23.de/maven')
+    }
+
+    maven {
+        url = "https://repo.codemc.io/repository/relativitymc/"
     }
 
     // Repositories for the dependencies of Tax Free Levels
@@ -44,7 +48,7 @@ dependencies {
         "fabric-networking-api-v1"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    // modCompileOnly "io.github.fourmisain:TaxFreeLevels-fabric:$project.tax_free_levels_version"
+    modCompileOnly "io.github.fourmisain:TaxFreeLevels-fabric:$project.tax_free_levels_version"
 
     modImplementation "de.mschae23:codec-config-api:$project.codec_config_api_version"
     include "de.mschae23:codec-config-api:$project.codec_config_api_version"

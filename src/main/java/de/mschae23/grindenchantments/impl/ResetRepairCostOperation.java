@@ -128,7 +128,7 @@ public class ResetRepairCostOperation implements GrindstoneEvents.CanInsert, Gri
             return false;
 
         return (input1.isDamageable() || EnchantmentHelper.canHaveEnchantments(input1))
-            && !input2.isOf(Items.BOOK) && !input2.isOf(Items.ENCHANTED_BOOK) && !input2.isDamageable() && !input2.isOf(input1.getItem())
+            && !input2.is(Items.BOOK) && !input2.is(Items.ENCHANTED_BOOK) && !input2.isDamageable() && !input2.is(input1.getItem())
             && input2.getRegistryEntry().getKey().map(key -> config.catalystItems().contains(key.getValue())).orElse(false);
     }
 

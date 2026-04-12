@@ -49,7 +49,7 @@ import org.jetbrains.annotations.Nullable;
 public class MoveOperation implements GrindstoneEvents.CanInsert, GrindstoneEvents.UpdateResult, GrindstoneEvents.CanTakeResult, GrindstoneEvents.TakeResult, GrindstoneEvents.LevelCost {
     @Override
     public boolean canInsert(ItemStack stack, ItemStack other, int slotId) {
-        return stack.getItem() == Items.BOOK && !other.isOf(Items.BOOK);
+        return stack.getItem() == Items.BOOK && !other.is(Items.BOOK);
     }
 
     @Override

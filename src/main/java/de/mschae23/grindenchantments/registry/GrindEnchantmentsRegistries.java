@@ -27,7 +27,7 @@ import de.mschae23.grindenchantments.cost.CostFunctionType;
 
 public final class GrindEnchantmentsRegistries {
     public static final RegistryKey<Registry<CostFunctionType<?>>> COST_FUNCTION_KEY = RegistryKey.ofRegistry(GrindEnchantmentsMod.id("cost_function_type"));
-    public static final Registry<CostFunctionType<?>> COST_FUNCTION = FabricRegistryBuilder.createSimple(COST_FUNCTION_KEY).buildAndRegister();
+    public static final Registry<CostFunctionType<?>> COST_FUNCTION = FabricRegistryBuilder.createDefaulted(COST_FUNCTION_KEY, GrindEnchantmentsMod.id("count_enchantments")).buildAndRegister();
 
     private GrindEnchantmentsRegistries() {
     }
