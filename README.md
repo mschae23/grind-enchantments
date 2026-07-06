@@ -1,10 +1,12 @@
 # Grind enchantments
-
-[![build](https://github.com/mschae23/grind-enchantments/actions/workflows/build.yml/badge.svg)](https://github.com/mschae23/grind-enchantments/actions/workflows/build.yml)
-
 Put an enchanted item and a book into a grindstone to put the enchantments onto the book using a few of your levels. You will get the unenchanted item back.
 
 This mod is for Fabric.
+
+## Moved away from GitHub
+This mod is no longer hosted on GitHub. You can find the new repository at <https://code.mschae23.de/mschae23/grind-enchantments>.
+For bug reports and feature requests, you can send an email to [grindenchantments@lists.mschae23.de](mailto:grindenchantments@lists.mschae23.de)
+(or browse the [archive](https://lists.mschae23.de/archives/list/grindenchantments@lists.mschae23.de/)).
 
 ## License
 Grind enchantments
